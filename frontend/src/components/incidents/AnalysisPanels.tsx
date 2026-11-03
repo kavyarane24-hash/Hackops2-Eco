@@ -28,7 +28,7 @@ const EVIDENCE_GROUP: Record<EvidenceItem['type'], string> = {
 
 function ConfidenceBar({ value, label }: { value: number; label: string }) {
   const pct = Math.round(value * 100);
-  const color = value >= 0.7 ? '#3ad6e0' : value >= 0.45 ? '#f5b83d' : '#9aa7b8';
+  const color = value >= 0.7 ? '#087f8c' : value >= 0.45 ? '#f5b83d' : '#68777b';
   return (
     <div>
       <div className="flex items-center justify-between text-xs">
@@ -219,7 +219,7 @@ export function ComplianceTable({ rows }: { rows: ComplianceComparison[] }) {
           </thead>
           <tbody>
             {rows.map((r) => {
-              const tone = r.assessment === 'Within selected reference limit' ? '#86efac' : r.assessment === 'Insufficient data for assessment' ? '#a3b0b8' : r.assessment === 'Above selected reference limit' ? '#fca5a5' : '#fcd68a';
+              const tone = r.assessment === 'Within selected reference limit' ? '#157a4b' : r.assessment === 'Insufficient data for assessment' ? '#68777b' : r.assessment === 'Above selected reference limit' ? '#b42318' : '#8a5a00';
               return (
                 <tr key={`${r.pollutant}-${r.averagingPeriod}`} className="border-t border-[var(--line)]">
                   <td className="px-3 py-2 font-bold">{r.pollutant}</td>

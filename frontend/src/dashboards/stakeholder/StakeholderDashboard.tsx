@@ -198,7 +198,7 @@ export default function StakeholderDashboard() {
                     <span className="num text-xs text-ink-300">{v.open} open{v.critical ? ` · ${v.critical} critical` : ''}</span>
                   </div>
                   <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-ink-700">
-                    <div className="h-full rounded-full" style={{ width: `${(v.open / max) * 100}%`, background: v.critical ? SEVERITY_COLOR.Critical : '#3ad6e0' }} />
+                    <div className="h-full rounded-full" style={{ width: `${(v.open / max) * 100}%`, background: v.critical ? SEVERITY_COLOR.Critical : '#087f8c' }} />
                   </div>
                 </li>
               );

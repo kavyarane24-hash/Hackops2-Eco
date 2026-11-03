@@ -5,6 +5,8 @@ import { Spinner } from '@/components/common/Panel';
 
 // Route-level code splitting: each dashboard loads on demand.
 const CitizenDashboard = lazy(() => import('@/dashboards/citizen/CitizenDashboard'));
+const CitizenComplaints = lazy(() => import('@/dashboards/citizen/CitizenComplaints'));
+const Landing = lazy(() => import('@/landing/Landing'));
 const AdminLayout = lazy(() => import('@/dashboards/admin/AdminLayout'));
 const AdminDashboard = lazy(() => import('@/dashboards/admin/AdminDashboard'));
 const AdminAnalytics = lazy(() => import('@/dashboards/admin/AdminAnalytics'));
@@ -28,12 +30,12 @@ const page = (el: ReactNode) => (
 );
 
 export const router = createBrowserRouter([
+  { path: '/', element: page(<Landing />) },
   {
-    path: '/',
     element: <AppShell />,
     children: [
-      { index: true, element: <Navigate to="/citizen" replace /> },
       { path: 'citizen', element: page(<CitizenDashboard />) },
+      { path: 'citizen/complaints', element: page(<CitizenComplaints />) },
       {
         path: 'admin',
         element: page(<AdminLayout />),

@@ -1,42 +1,30 @@
 import { useRef } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { BarChart3, CalendarDays, ClipboardCheck, FileText, LayoutList, UploadCloud } from 'lucide-react';
-import { useIncidentStore } from '@/context/IncidentStore';
+import { Outlet, useLocation } from 'react-router-dom';
+import { currentSection } from '@/components/layout/AppShell';
 import { useReveal } from '@/hooks/motion';
 
-const TABS = [
-  { to: '/admin', end: true, label: 'Operations', icon: LayoutList },
-  { to: '/admin/actions', label: 'Action & Management', icon: ClipboardCheck },
-  { to: '/admin/timeline', label: 'Timeline', icon: CalendarDays },
-  { to: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
-  { to: '/admin/import', label: 'Data Import & Analysis', icon: UploadCloud },
-  { to: '/admin/reports', label: 'Incident Reports', icon: FileText },
-];
+const DESCRIPTION: Record<string, string> = {
+  Incidents: 'All incidents, what needs allocation and what is awaiting verification.',
+  'Action & Management': 'Assignments, deadlines, field progress and verification decisions.',
+  Timeline: 'Every day on which something was recorded, with its events and readings.',
+  Analytics: 'Trends from imported monitoring data.',
+  'Data Import & Analysis': 'Upload datasets and documents, review extraction, approve findings.',
+  'Incident Reports': 'Generate, version and download formal investigation reports.',
+};
 
-/** Admin dashboard frame: one header, sub-navigation, and the active view. */
+/** Admin frame: compact header for the active section (navigation lives in the sidebar). */
 export default function AdminLayout() {
   const scope = useRef<HTMLDivElement>(null);
   const { pathname } = useLocation();
   useReveal(scope, [pathname]);
-  const pending = useIncidentStore((s) => s.potentials.filter((p) => p.status === 'pending').length);
-  const verify = useIncidentStore((s) => s.incidents.filter((i) => i.status === 'Verification Pending').length);
+  const section = currentSection('admin', pathname) ?? 'Incidents';
 
   return (
     <div ref={scope} className="space-y-5">
-      <div className="reveal">
-        <p className="eyebrow mb-1">Admin</p>
-        <h1 className="page-title">Environmental operations</h1>
-      </div>
-      <nav aria-label="Admin sections" className="tabs reveal">
-        {TABS.map(({ to, end, label, icon: Icon }) => (
-          <NavLink key={to} to={to} end={end} className={({ isActive }) => `tab ${isActive ? 'active' : ''}`}>
-            <Icon size={15} aria-hidden />
-            {label}
-            {label === 'Action & Management' && verify > 0 && <span className="num rounded-full bg-[#c084fc22] px-1.5 text-[11px] text-[#d8b4fe]" title="Awaiting verification">{verify}</span>}
-            {label.startsWith('Data') && pending > 0 && <span className="num rounded-full bg-accent-soft px-1.5 text-[11px] text-accent" title="Potential incidents awaiting review">{pending}</span>}
-          </NavLink>
-        ))}
-      </nav>
+      <header className="reveal">
+        <h1 className="page-title">{section}</h1>
+        <p className="mt-1 text-[13px] text-ink-400 [font-family:var(--font-small)]">{DESCRIPTION[section]}</p>
+      </header>
       <Outlet />
     </div>
   );

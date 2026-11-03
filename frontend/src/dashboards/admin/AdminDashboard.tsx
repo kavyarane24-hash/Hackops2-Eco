@@ -50,11 +50,11 @@ export default function AdminDashboard() {
       <KpiStrip
         items={[
           { label: 'All incidents', value: incidents.length, onClick: () => pick('all'), active: quick === 'all' },
-          { label: 'Critical open', value: count('critical'), tone: '#f87171', onClick: () => pick('critical'), active: quick === 'critical' },
+          { label: 'Critical open', value: count('critical'), tone: '#c0362c', onClick: () => pick('critical'), active: quick === 'critical' },
           { label: 'Unassigned', value: count('unassigned'), tone: '#f5b83d', onClick: () => pick('unassigned'), active: quick === 'unassigned' },
           { label: 'Action pending', value: count('pending'), onClick: () => pick('pending'), active: quick === 'pending' },
-          { label: 'Awaiting verification', value: count('verification'), tone: '#d8b4fe', onClick: () => pick('verification'), active: quick === 'verification' },
-          { label: 'Resolved', value: count('resolved'), tone: '#4ade80', hint: avgH != null ? `Avg ${avgH} h to close` : undefined, onClick: () => pick('resolved'), active: quick === 'resolved' },
+          { label: 'Awaiting verification', value: count('verification'), tone: '#6b4a9e', onClick: () => pick('verification'), active: quick === 'verification' },
+          { label: 'Resolved', value: count('resolved'), tone: '#1f8a5b', hint: avgH != null ? `Avg ${avgH} h to close` : undefined, onClick: () => pick('resolved'), active: quick === 'resolved' },
         ]}
       />
 

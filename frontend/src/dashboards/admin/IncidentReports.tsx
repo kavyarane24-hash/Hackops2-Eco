@@ -120,7 +120,7 @@ export default function IncidentReports() {
               </div>
             </div>
             {outdated && (
-              <p className="flex items-center gap-2 rounded-md bg-sev-medium/10 px-4 py-2 text-[13px] text-[#fcd68a]">
+              <p className="flex items-center gap-2 rounded-md bg-sev-medium/10 px-4 py-2 text-[13px] text-[#8a5a00]">
                 <AlertCircle size={15} aria-hidden /> The incident has changed since this version was generated (new evidence, assignment or verification). Regenerate to include it.
               </p>
             )}

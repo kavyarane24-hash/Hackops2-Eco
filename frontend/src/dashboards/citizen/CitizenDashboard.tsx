@@ -1,18 +1,15 @@
-import { useMemo, useRef, useState, type FormEvent } from 'react';
-import { CheckCircle2, ChevronRight, Copy, Languages, Send } from 'lucide-react';
+import { useRef, useState, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
+import { CheckCircle2, Copy, Languages, Send } from 'lucide-react';
 import type { Language, MediaFile } from '@/types';
 import { useIncidentStore } from '@/context/IncidentStore';
 import { toast, useUI } from '@/context/uiStore';
 import { citizenCopy } from '@/content/content';
-import { DEMO_REPORTER_ID } from '@/services/mockData';
-import { Panel, Field, EmptyState, Spinner } from '@/components/common/Panel';
+import { Panel, Field, Spinner } from '@/components/common/Panel';
 import { MediaUploader } from '@/components/common/Media';
-import { SeverityBadge, StatusBadge } from '@/components/common/Badges';
-import { StageProgress } from '@/components/timeline/Timeline';
 import { LocationPicker } from '@/components/maps/LocationPicker';
-import { useIncidentParam } from '@/components/incidents/IncidentDrawer';
 import { useLenis, useReveal } from '@/hooks/motion';
-import { fmtDateTime, isValidCoord } from '@/utils';
+import { isValidCoord } from '@/utils';
 import { cn } from '@/lib/utils';
 
 
@@ -24,9 +21,6 @@ export default function CitizenDashboard() {
   const { citizenLang, setCitizenLang } = useUI();
   const t = citizenCopy(citizenLang);
   const submitComplaint = useIncidentStore((s) => s.submitComplaint);
-  const incidents = useIncidentStore((s) => s.incidents);
-  const mine = useMemo(() => incidents.filter((i) => i.reporterId === DEMO_REPORTER_ID), [incidents]);
-  const { open } = useIncidentParam();
 
   const [text, setText] = useState('');
   const [language, setLanguage] = useState<Language>(citizenLang);
@@ -80,7 +74,7 @@ export default function CitizenDashboard() {
 
 
   return (
-    <div ref={scope} className="grid gap-5 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
+    <div ref={scope} className="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(260px,1fr)]">
       <div className="space-y-5">
         <div className="reveal flex flex-wrap items-end justify-between gap-3">
           <div>
@@ -123,9 +117,9 @@ export default function CitizenDashboard() {
             >
               <Copy size={14} />
             </button>
-            <button className="btn btn-ghost !min-h-8" onClick={() => open(submittedId)}>
+            <Link className="btn btn-ghost !min-h-8" to={`/citizen/complaints?incident=${submittedId}`}>
               {t.track}
-            </button>
+            </Link>
           </div>
         )}
 
@@ -174,7 +168,7 @@ export default function CitizenDashboard() {
                   invalid={!!errors.location}
                 />
               </div>
-              {errors.location && <p role="alert" className="mt-1 text-xs text-[#fca5a5]">{errors.location}</p>}
+              {errors.location && <p role="alert" className="mt-1 text-xs text-[#b42318]">{errors.location}</p>}
             </div>
 
             <Field label={t.address} htmlFor="c-address" error={errors.address} required>
@@ -204,38 +198,6 @@ export default function CitizenDashboard() {
       </div>
 
       <div className="space-y-5">
-        <Panel title={<span lang={citizenLang}>{t.myComplaints}</span>} eyebrow={`${mine.length} total`} bodyClassName="p-0">
-          {mine.length === 0 ? (
-            <EmptyState title={t.noComplaints} />
-          ) : (
-            <ul className="divide-y divide-[var(--line)]">
-              {mine.map((i) => {
-                return (
-                  <li key={i.id}>
-                    <button className="w-full px-4 py-3 text-left transition-colors hover:bg-ink-800/60" onClick={() => open(i.id)}>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="num text-sm font-semibold text-ink-100">{i.id}</span>
-                        <StatusBadge status={i.status} />
-                        {i.analysis && <SeverityBadge severity={i.analysis.severity} />}
-                        <ChevronRight size={15} className="ml-auto text-ink-500" aria-hidden />
-                      </div>
-                      <p className="mt-1 line-clamp-1 text-xs text-ink-300" lang={i.complaint.language}>{i.complaint.originalText}</p>
-                      <div className="mt-2.5">
-                        <StageProgress incident={i} />
-                      </div>
-                      <p className="mt-1.5 text-[11px] text-ink-400">
-                        {fmtDateTime(i.complaint.timestamp)}
-                        {i.assignment && ` · ${i.assignment.department}`}
-                        {i.status === 'Reopened' && ' · reopened for further action'}
-                      </p>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </Panel>
-
         <Panel title="How your report is handled" eyebrow="Process">
           <ol className="space-y-2 text-sm text-ink-300">
             {['AI assesses category, severity and likely sources', 'An administrator assigns the responsible department and officer', 'A field officer inspects and takes action', 'The administrator verifies the action and closes the case'].map((s, idx) => (

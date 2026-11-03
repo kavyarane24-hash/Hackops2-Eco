@@ -73,7 +73,7 @@ export function MediaUploader({
         />
       </div>
       {errors.length > 0 && (
-        <ul role="alert" className="mt-2 space-y-0.5 text-xs text-[#fca5a5]">
+        <ul role="alert" className="mt-2 space-y-0.5 text-xs text-[#b42318]">
           {errors.map((e) => (
             <li key={e}>{e}</li>
           ))}

@@ -60,7 +60,7 @@ export function LocationPicker({ lat, lng, onChange, useMyLocationLabel, invalid
           <ClickToPick onPick={onChange} />
           <Recenter lat={lat} lng={lng} />
           {isValidCoord(lat, lng) && (
-            <CircleMarker center={[lat, lng as number]} radius={9} pathOptions={{ color: '#ffffff', weight: 2, fillColor: '#3ad6e0', fillOpacity: 0.9 }} />
+            <CircleMarker center={[lat, lng as number]} radius={9} pathOptions={{ color: '#ffffff', weight: 2, fillColor: '#087f8c', fillOpacity: 0.9 }} />
           )}
         </MapContainer>
       </div>
@@ -73,7 +73,7 @@ export function LocationPicker({ lat, lng, onChange, useMyLocationLabel, invalid
           {useMyLocationLabel}
         </button>
       </div>
-      {geoState === 'error' && <p className="mt-1 text-xs text-[#fca5a5]">{geoMsg}</p>}
+      {geoState === 'error' && <p className="mt-1 text-xs text-[#b42318]">{geoMsg}</p>}
     </div>
   );
 }

@@ -270,7 +270,7 @@ export default function FieldOfficerDashboard() {
                             After photos / videos <span className="text-sev-critical" aria-hidden>*</span>
                           </p>
                           <MediaUploader id="f-after" value={after} onChange={setAfter} phase="after" label="Add after evidence" />
-                          {errors.after && <p role="alert" className="mt-1 text-xs text-[#fca5a5]">{errors.after}</p>}
+                          {errors.after && <p role="alert" className="mt-1 text-xs text-[#b42318]">{errors.after}</p>}
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-2">

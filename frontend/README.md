@@ -5,7 +5,9 @@ One React app with four role dashboards that share a single incident store.
 
 | Route | View | Purpose |
 |---|---|---|
-| `/citizen` | Citizen | Report a complaint (English/Hindi, map pin, photo/video), track “My complaints” |
+| `/` | Landing | Video hero with glass panels (live counts only), dashboard previews, workflow, features |
+| `/citizen` | Citizen › Report pollution | Guided complaint form (English/Hindi, map pin, photo/video) |
+| `/citizen/complaints` | Citizen › My complaints | Four-step progress (Report Submitted → Assessment → Investigation → Resolution) with dates |
 | `/admin` | Admin › Operations | KPI strip and the incident table (the main workspace), verification and allocation queues |
 | `/admin/actions` | Admin › Action & Management | Moving action board (Carousel), overdue/due-soon/awaiting-verification counts, allocate, review, reopen, officer workload |
 | `/admin/timeline` | Admin › Timeline | Recorded-day activity timeline and monitoring readings by day (real records only) |
@@ -91,13 +93,11 @@ A comparison is only made when the observation's averaging period and unit match
 
 ## Design system
 
-- **Fonts** are system fonts (`src/index.css`): Arial for body text, Trebuchet MS for headings, Tahoma for navigation and labels, Verdana for supporting text, Georgia for reports, Courier New for identifiers.
-- **Palette:** deep slate with a single teal accent. Rust is reserved for "demo" labels. Severity colours are fixed.
-- **Effects:**
-  - LiquidEther: a subtle background under near-opaque surfaces, falling back to a static tone without WebGL or with reduced motion.
-  - GlowCursor: an optional trail; the native cursor stays visible, and it's off on touch devices and with reduced motion.
-  - Carousel: Admin › Analytics priority incidents.
-- Both effects can be toggled from the top bar.
+- **Dashboards: bright utilitarian.** Light page (`#F5F8F7`), white surfaces, dark text (`#243238`), teal accent (`#087F8C`/`#075E63`), environmental green, purple only for active-step accents. Tokens live in `src/index.css`.
+- **Navigation:** left sidebar with the role switcher and per-role sections; it becomes a slide-out menu on mobile.
+- **Landing page only: glassmorphism** (`.glass`, `.glass-light`) over a muted, looping hero video. The default clip is Mixkit 1651, "City traffic near a factory at sunset" (free licence); override it with `VITE_HERO_VIDEO_URL`. The poster image is shown instead when reduced motion is requested or the video fails.
+- **Fonts:** Arial (body), Trebuchet MS (headings), Tahoma (navigation), Verdana (supporting text), Georgia (reports), Courier New (identifiers). All system fonts.
+- **Effects:** the Carousel is used only for the Action & Management board. LiquidEther and GlowCursor were removed because they don't suit the bright workspace or the video hero.
 
 ## Backend integration status
 

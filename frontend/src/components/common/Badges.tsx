@@ -30,7 +30,7 @@ export function StatusBadge({ status, className }: { status: IncidentStatus; cla
 }
 
 export function UrgencyBadge({ urgency }: { urgency: Urgency }) {
-  const tone = { Low: '#9aa7b8', Moderate: '#f5b83d', High: '#f97316', Immediate: '#ef4444' }[urgency];
+  const tone = { Low: '#68777b', Moderate: '#f5b83d', High: '#f97316', Immediate: '#ef4444' }[urgency];
   return (
     <span className="chip" style={{ color: tone, borderColor: `${tone}55` }}>
       Urgency · {urgency}
