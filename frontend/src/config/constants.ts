@@ -13,23 +13,23 @@ export const CATEGORIES: IncidentCategory[] = [
 ];
 
 export const SEVERITY_COLOR: Record<Severity, string> = {
-  Low: '#1f9d55',
-  Medium: '#c98a00',
-  High: '#e0620b',
-  Critical: '#d92d20',
+  Low: '#5fd38d',
+  Medium: '#f2c14e',
+  High: '#f59a52',
+  Critical: '#f06b6b',
 };
 
 export const SEVERITY_RANK: Record<Severity, number> = { Low: 1, Medium: 2, High: 3, Critical: 4 };
 
 export const STATUS_TONE: Record<IncidentStatus, string> = {
-  Reported: '#5b6b70',
-  Assessed: '#2f6f86',
-  Allocated: '#087f8c',
-  'Under Investigation': '#2563a8',
-  'Action Submitted': '#7456a8',
-  'Verification Pending': '#7456a8',
-  'Verified Closed': '#1f8a5b',
-  Reopened: '#a35a2a',
+  Reported: '#a9bac4',
+  Assessed: '#8fb3c9',
+  Allocated: '#7cc4c2',
+  'Under Investigation': '#5fb3a8',
+  'Action Submitted': '#e494a8',
+  'Verification Pending': '#DA7B93',
+  'Verified Closed': '#6fd39b',
+  Reopened: '#f0a8b8',
 };
 
 /** Statuses that count as "open" work. */

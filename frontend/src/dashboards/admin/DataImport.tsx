@@ -18,7 +18,7 @@ import { fmtBytes, fmtDateTime, isValidCoord } from '@/utils';
 import { cn } from '@/lib/utils';
 
 const KIND_ICON = { csv: FileSpreadsheet, excel: FileSpreadsheet, json: FileJson, pdf: FileText, docx: FileType, image: FileImage } as const;
-const STATUS_TONE: Record<ImportFile['status'], string> = { Uploaded: '#68777b', Processing: '#3f86c9', Processed: '#1f8a5b', Failed: '#c0362c' };
+const STATUS_TONE: Record<ImportFile['status'], string> = { Uploaded: '#a9bac4', Processing: '#3f86c9', Processed: '#1f8a5b', Failed: '#c0362c' };
 
 export default function DataImport() {
   const { files, addFiles, process, remove, update, clear, buildBatch } = useImportSession();
@@ -385,10 +385,10 @@ function DailyChart({ daily }: { daily: DailyAggregate[] }) {
     <div className="h-56" role="img" aria-label="Daily PM2.5 and PM10 averages with NAAQS 24-hour limits">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={daily.map((d) => ({ day: d.day.slice(5), 'PM2.5': d.pm25, PM10: d.pm10 }))} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-          <CartesianGrid stroke="#24323814" vertical={false} />
-          <XAxis dataKey="day" tick={{ fill: '#68777b', fontSize: 11 }} tickLine={false} />
-          <YAxis tick={{ fill: '#68777b', fontSize: 11 }} tickLine={false} axisLine={false} width={40} label={{ value: 'µg/m³', angle: -90, position: 'insideLeft', fill: '#75858f', fontSize: 11, dx: 10 }} />
-          <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #68777b44', borderRadius: 8, fontSize: 12 }} formatter={(v) => [`${v} µg/m³`]} />
+          <CartesianGrid stroke="#ffffff14" vertical={false} />
+          <XAxis dataKey="day" tick={{ fill: '#a9bac4', fontSize: 11 }} tickLine={false} />
+          <YAxis tick={{ fill: '#a9bac4', fontSize: 11 }} tickLine={false} axisLine={false} width={40} label={{ value: 'µg/m³', angle: -90, position: 'insideLeft', fill: '#75858f', fontSize: 11, dx: 10 }} />
+          <Tooltip contentStyle={{ background: '#1C3334', border: '1px solid #ffffff22', borderRadius: 8, fontSize: 12 }} formatter={(v) => [`${v} µg/m³`]} />
           <Legend wrapperStyle={{ fontSize: 12 }} />
           <ReferenceLine y={60} stroke="#f5b83d" strokeDasharray="4 4" label={{ value: 'PM2.5 24-h limit 60', fill: '#f5b83d', fontSize: 10, position: 'insideTopLeft' }} />
           <ReferenceLine y={100} stroke="#c0362c" strokeDasharray="4 4" label={{ value: 'PM10 24-h limit 100', fill: '#c0362c', fontSize: 10, position: 'insideTopRight' }} />

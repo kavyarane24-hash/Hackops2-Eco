@@ -52,5 +52,5 @@ export const CAROUSEL = {
   gap: 12,
   radius: 12,
   frame: false,
-  theme: 'light' as const,
+  theme: 'dark' as const,
 };
