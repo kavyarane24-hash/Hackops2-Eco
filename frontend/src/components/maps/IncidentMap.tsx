@@ -1,0 +1,145 @@
+import { useEffect, useMemo } from 'react';
+import { MapContainer, TileLayer, CircleMarker, Circle, Popup, Tooltip, useMap } from 'react-leaflet';
+import type { LatLngExpression } from 'leaflet';
+import type { Incident, Severity } from '@/types';
+import { DEFAULT_CENTER, DEFAULT_ZOOM, SEVERITY_COLOR, SEVERITY_RANK } from '@/config/constants';
+import { fmtDateTime, isValidCoord } from '@/utils';
+
+export const OSM_TILES = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+export const OSM_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
+/** Keeps Leaflet sized correctly when its container resizes (drawers, grids). */
+export function MapAutoResize() {
+  const map = useMap();
+  useEffect(() => {
+    const el = map.getContainer();
+    const ro = new ResizeObserver(() => map.invalidateSize());
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [map]);
+  return null;
+}
+
+function FlyToSelected({ incident }: { incident?: Incident }) {
+  const map = useMap();
+  useEffect(() => {
+    if (!incident) return;
+    const { lat, lng } = incident.complaint.location;
+    // Pan only when the marker is near/outside the edge, so an open popup isn't shifted off-screen.
+    if (isValidCoord(lat, lng) && !map.getBounds().pad(-0.15).contains([lat, lng as number])) {
+      map.panTo([lat, lng as number], { animate: true, duration: 0.5 });
+    }
+  }, [incident, map]);
+  return null;
+}
+
+export interface Hotspot {
+  key: string;
+  center: [number, number];
+  count: number;
+  maxSeverity: Severity;
+}
+
+/** Grid clustering (~5.5 km cells) of open incidents into hotspots. */
+export function computeHotspots(incidents: Incident[], cell = 0.05): Hotspot[] {
+  const map = new Map<string, { lat: number; lng: number; n: number; sev: Hotspot['maxSeverity'] }>();
+  for (const i of incidents) {
+    const { lat, lng } = i.complaint.location;
+    if (!isValidCoord(lat, lng) || i.status === 'Verified Closed') continue;
+    const key = `${Math.round(lat / cell)}:${Math.round((lng as number) / cell)}`;
+    const sev = i.analysis?.severity ?? 'Low';
+    const cur = map.get(key);
+    if (cur) {
+      cur.lat += lat;
+      cur.lng += lng as number;
+      cur.n += 1;
+      if (SEVERITY_RANK[sev] > SEVERITY_RANK[cur.sev]) cur.sev = sev;
+    } else map.set(key, { lat, lng: lng as number, n: 1, sev });
+  }
+  return [...map.entries()].map(([key, v]) => ({ key, center: [v.lat / v.n, v.lng / v.n], count: v.n, maxSeverity: v.sev }));
+}
+
+interface Props {
+  incidents: Incident[];
+  selectedId?: string;
+  onSelect: (id: string) => void;
+  onOpenDetails: (id: string) => void;
+  showHotspots?: boolean;
+  className?: string;
+}
+
+export function IncidentMap({ incidents, selectedId, onSelect, onOpenDetails, showHotspots = true, className }: Props) {
+  const located = useMemo(() => incidents.filter((i) => isValidCoord(i.complaint.location.lat, i.complaint.location.lng)), [incidents]);
+  const hotspots = useMemo(() => (showHotspots ? computeHotspots(incidents) : []), [incidents, showHotspots]);
+  const selected = located.find((i) => i.id === selectedId);
+
+  return (
+    <MapContainer center={DEFAULT_CENTER as LatLngExpression} zoom={DEFAULT_ZOOM} className={`map-dark h-full w-full ${className ?? ''}`} scrollWheelZoom>
+      <TileLayer url={OSM_TILES} attribution={OSM_ATTRIBUTION} maxZoom={19} />
+      <MapAutoResize />
+      <FlyToSelected incident={selected} />
+
+      {hotspots.map((h) => (
+        <Circle
+          key={h.key}
+          center={h.center}
+          radius={900 + h.count * 700}
+          pathOptions={{ color: SEVERITY_COLOR[h.maxSeverity], weight: 1, opacity: 0.5, fillOpacity: 0.12, dashArray: '4 4' }}
+          interactive={false}
+        />
+      ))}
+
+      {located.map((i) => {
+        const sev = i.analysis?.severity ?? 'Low';
+        const color = i.status === 'Verified Closed' ? '#6b7a8f' : SEVERITY_COLOR[sev];
+        const isSel = i.id === selectedId;
+        const pos: [number, number] = [i.complaint.location.lat as number, i.complaint.location.lng as number];
+        return (
+          <CircleMarker
+            key={`${i.id}-${i.status}-${sev}`}
+            center={pos}
+            radius={isSel ? 13 : sev === 'Critical' ? 10 : 8}
+            pathOptions={{
+              color: isSel ? '#ffffff' : color,
+              weight: isSel ? 3 : 2,
+              fillColor: color,
+              fillOpacity: i.status === 'Verified Closed' ? 0.35 : 0.8,
+              dashArray: i.status === 'Verified Closed' ? '3 3' : undefined,
+            }}
+            eventHandlers={{ click: () => onSelect(i.id) }}
+          >
+            <Tooltip direction="top" offset={[0, -8]}>
+              {i.id} · {sev}
+            </Tooltip>
+            <Popup minWidth={240}>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <strong className="num text-[13px]">{i.id}</strong>
+                  <span style={{ color }} className="text-xs font-semibold">{sev}</span>
+                </div>
+                <p className="text-xs text-ink-300">{i.analysis?.category ?? 'Awaiting analysis'}</p>
+                <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
+                  <dt className="text-ink-400">Urgency</dt>
+                  <dd>{i.analysis?.urgency ?? '—'}</dd>
+                  <dt className="text-ink-400">Status</dt>
+                  <dd>{i.status}</dd>
+                  <dt className="text-ink-400">Department</dt>
+                  <dd>{i.assignment?.department ?? 'Unassigned'}</dd>
+                  <dt className="text-ink-400">Officer</dt>
+                  <dd>{i.assignment?.officerName ?? '—'}</dd>
+                  <dt className="text-ink-400">Reported</dt>
+                  <dd>{fmtDateTime(i.complaint.timestamp)}</dd>
+                </dl>
+                <p className="text-[11px] text-ink-300">{i.complaint.location.address}</p>
+                {i.complaint.location.simulated && <p className="text-[10px] uppercase tracking-wider text-rust">Simulated demo coordinates</p>}
+                <button className="btn btn-primary !min-h-8 w-full !text-xs" onClick={() => onOpenDetails(i.id)}>
+                  Open full details
+                </button>
+              </div>
+            </Popup>
+          </CircleMarker>
+        );
+      })}
+    </MapContainer>
+  );
+}
