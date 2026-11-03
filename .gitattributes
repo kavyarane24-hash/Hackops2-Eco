@@ -1,0 +1,11 @@
+# Store text files with LF line endings, whatever OS the commit comes from
+* text=auto eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
