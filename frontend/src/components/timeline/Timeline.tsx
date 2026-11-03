@@ -14,7 +14,7 @@ function DayNavigator({ days, value, onChange }: { days: { day: string; count: n
   const idx = days.findIndex((d) => d.day === value);
   return (
     <div className="flex items-center gap-2">
-      <button className="btn btn-quiet !min-h-8 !px-2" disabled={idx >= days.length - 1} onClick={() => onChange(days[idx + 1].day)} aria-label="Earlier recorded day">
+      <button className="btn btn-quiet !min-h-8 !px-2 text-ink-200 hover:text-ink-100" disabled={idx >= days.length - 1} onClick={() => onChange(days[idx + 1].day)} aria-label="Earlier recorded day">
         <ChevronLeft size={16} />
       </button>
       <div role="listbox" aria-label="Recorded days" className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto pb-1">
@@ -24,14 +24,19 @@ function DayNavigator({ days, value, onChange }: { days: { day: string; count: n
             role="option"
             aria-selected={d.day === value}
             onClick={() => onChange(d.day)}
-            className={cn('shrink-0 rounded-md px-3 py-1.5 text-left transition-colors', d.day === value ? 'bg-accent-soft text-ink-100 shadow-[inset_0_-2px_0_var(--color-accent)]' : 'text-ink-300 hover:bg-ink-800')}
+            className={cn(
+              'shrink-0 rounded-lg px-3 py-1.5 text-left transition-all',
+              d.day === value
+                ? 'bg-muted-teal/20 text-ink-100 font-bold shadow-[inset_0_-2px_0_#DA7B93]'
+                : 'text-ink-300 hover:bg-muted-teal/20 hover:text-ink-100',
+            )}
           >
             <span className="block text-[13px] [font-family:var(--font-nav)]">{dayLabel(d.day, { day: '2-digit', month: 'short' })}</span>
-            <span className="muted block !text-[11px]">{d.count} record{d.count === 1 ? '' : 's'}</span>
+            <span className="muted block !text-[11px] text-ink-400">{d.count} record{d.count === 1 ? '' : 's'}</span>
           </button>
         ))}
       </div>
-      <button className="btn btn-quiet !min-h-8 !px-2" disabled={idx <= 0} onClick={() => onChange(days[idx - 1].day)} aria-label="Later recorded day">
+      <button className="btn btn-quiet !min-h-8 !px-2 text-ink-200 hover:text-ink-100" disabled={idx <= 0} onClick={() => onChange(days[idx - 1].day)} aria-label="Later recorded day">
         <ChevronRight size={16} />
       </button>
     </div>
@@ -43,17 +48,17 @@ function EventRow({ e, showIncident = true }: { e: TimelineEvent; showIncident?:
   const meta = EVENT_META[e.type];
   return (
     <li className="relative pl-6">
-      <span className="absolute left-0 top-1.5 h-2.5 w-2.5 rounded-full" style={{ background: meta.color }} aria-hidden />
+      <span className="absolute left-0 top-1.5 h-2.5 w-2.5 rounded-full ring-2 ring-white" style={{ background: meta.color }} aria-hidden />
       <div className="flex flex-wrap items-baseline gap-x-2">
-        <time className="num text-[12.5px] text-ink-300" dateTime={e.timestamp} title={new Date(e.timestamp).toString()}>{time(e.timestamp)}</time>
+        <time className="num text-[12.5px] text-ink-400" dateTime={e.timestamp} title={new Date(e.timestamp).toString()}>{time(e.timestamp)}</time>
         <span className="text-[13px] font-bold" style={{ color: meta.color }}>{meta.label}</span>
         {showIncident && e.incidentId && (
-          <button className="num text-[12.5px] text-accent hover:underline" onClick={() => open(e.incidentId!)}>{e.incidentId}</button>
+          <button className="num text-[12.5px] font-bold text-teal-lite hover:underline hover:text-ink-100" onClick={() => open(e.incidentId!)}>{e.incidentId}</button>
         )}
       </div>
-      <p className="text-[13.5px] text-ink-200">{e.description}</p>
+      <p className="text-[13.5px] text-ink-100 font-normal">{e.description}</p>
       {(e.location || e.status) && (
-        <p className="muted">{[e.location, e.status && `now: ${e.status}`].filter(Boolean).join(' · ')}</p>
+        <p className="muted text-ink-400">{[e.location, e.status && `now: ${e.status}`].filter(Boolean).join(' · ')}</p>
       )}
     </li>
   );
@@ -87,18 +92,18 @@ export function RecordedTimeline() {
 
       {view === 'activity' && (
         <>
-          <div className="flex flex-wrap gap-2">
-            <select aria-label="Filter by event type" className="input !w-auto" value={type} onChange={(e) => setType(e.target.value as EventType | '')}>
+          <div className="flex flex-wrap items-center gap-2">
+            <select aria-label="Filter by event type" className="input !w-auto !py-1.5 !text-[13px]" value={type} onChange={(e) => setType(e.target.value as EventType | '')}>
               <option value="">All event types</option>
               {(Object.keys(EVENT_META) as EventType[]).map((k) => <option key={k} value={k}>{EVENT_META[k].label}</option>)}
             </select>
-            <select aria-label="Filter by incident" className="input !w-auto" value={incidentId} onChange={(e) => setIncidentId(e.target.value)}>
+            <select aria-label="Filter by incident" className="input !w-auto !py-1.5 !text-[13px]" value={incidentId} onChange={(e) => setIncidentId(e.target.value)}>
               <option value="">All incidents</option>
               {incidents.map((i) => <option key={i.id} value={i.id}>{i.id}</option>)}
             </select>
-            <div className="flex flex-wrap items-center gap-3 text-[12px] text-ink-400">
+            <div className="flex flex-wrap items-center gap-3 text-[12px] text-ink-300 font-medium">
               {(Object.keys(EVENT_META) as EventType[]).map((k) => (
-                <span key={k} className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full" style={{ background: EVENT_META[k].color }} aria-hidden />{EVENT_META[k].label}</span>
+                <span key={k} className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full ring-1 ring-black/10" style={{ background: EVENT_META[k].color }} aria-hidden />{EVENT_META[k].label}</span>
               ))}
             </div>
           </div>
@@ -107,9 +112,9 @@ export function RecordedTimeline() {
           ) : (
             <>
               <DayNavigator days={groups.map((g) => ({ day: g.day, count: g.events.length }))} value={current.day} onChange={setDay} />
-              <section>
-                <h3 className="panel-title mb-3">{dayLabel(current.day)} · {current.events.length} record{current.events.length === 1 ? '' : 's'}</h3>
-                <ol className="space-y-3 border-l border-[var(--line-strong)] pl-0 [&>li]:ml-[-5px]">
+              <section className="rounded-xl border border-[var(--line)] bg-surface-tinted/40 p-4">
+                <h3 className="panel-title mb-3 text-ink-100">{dayLabel(current.day)} · {current.events.length} record{current.events.length === 1 ? '' : 's'}</h3>
+                <ol className="space-y-3 border-l-2 border-[var(--line)] pl-0 [&>li]:ml-[-6px]">
                   {current.events.map((e) => <EventRow key={e.id} e={e} />)}
                 </ol>
               </section>
@@ -124,34 +129,36 @@ export function RecordedTimeline() {
         ) : (
           <>
             <DayNavigator days={rDays.map((d) => ({ day: d.day, count: d.observations }))} value={rCurrent.day} onChange={(d) => { setRDay(d); setShowRaw(false); }} />
-            <section className="space-y-3">
-              <h3 className="panel-title">{dayLabel(rCurrent.day)} · {rCurrent.observations} observation{rCurrent.observations === 1 ? '' : 's'}</h3>
-              <p className="muted">Stations: {rCurrent.stations.join(', ')}</p>
-              <div className="overflow-x-auto">
+            <section className="space-y-3 rounded-xl border border-[var(--line)] bg-surface-tinted/40 p-4">
+              <h3 className="panel-title text-ink-100">{dayLabel(rCurrent.day)} · {rCurrent.observations} observation{rCurrent.observations === 1 ? '' : 's'}</h3>
+              <p className="muted text-ink-400">Stations: {rCurrent.stations.join(', ')}</p>
+              <div className="overflow-x-auto rounded-lg border border-[var(--line)] bg-[var(--surface)]">
                 <table className="w-full min-w-[480px] text-[13px]">
-                  <thead className="text-left text-ink-400"><tr><th className="pb-1.5 font-normal">Pollutant</th><th className="pb-1.5 text-right font-normal">Values</th><th className="pb-1.5 text-right font-normal">Min</th><th className="pb-1.5 text-right font-normal">Mean</th><th className="pb-1.5 text-right font-normal">Max</th><th className="pb-1.5 pl-3 font-normal">Unit</th></tr></thead>
+                  <thead className="text-left text-ink-100 font-bold bg-deep-teal/50">
+                    <tr><th className="px-3 py-2 font-bold">Pollutant</th><th className="px-3 py-2 text-right font-bold">Values</th><th className="px-3 py-2 text-right font-bold">Min</th><th className="px-3 py-2 text-right font-bold">Mean</th><th className="px-3 py-2 text-right font-bold">Max</th><th className="px-3 py-2 pl-3 font-bold">Unit</th></tr>
+                  </thead>
                   <tbody>
                     {rCurrent.pollutants.map((p) => (
-                      <tr key={p.key} className="border-t border-[var(--line)]">
-                        <td className="py-1.5 font-bold">{p.key}</td>
-                        <td className="num py-1.5 text-right">{p.count}</td>
-                        <td className="num py-1.5 text-right">{p.min}</td>
-                        <td className="num py-1.5 text-right">{p.mean}</td>
-                        <td className="num py-1.5 text-right">{p.max}</td>
-                        <td className="py-1.5 pl-3 text-ink-400">{p.unit}</td>
+                      <tr key={p.key} className="border-t border-[var(--line)] hover:bg-muted-teal/20">
+                        <td className="px-3 py-2 font-bold text-ink-100">{p.key}</td>
+                        <td className="num px-3 py-2 text-right text-ink-200">{p.count}</td>
+                        <td className="num px-3 py-2 text-right text-ink-200">{p.min}</td>
+                        <td className="num px-3 py-2 text-right font-semibold text-ink-100">{p.mean}</td>
+                        <td className="num px-3 py-2 text-right text-ink-200">{p.max}</td>
+                        <td className="px-3 py-2 pl-3 text-ink-400">{p.unit}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-              <button className="flex items-center gap-2 text-[13px] text-ink-300" aria-expanded={showRaw} onClick={() => setShowRaw((x) => !x)}>
-                <ChevronDown size={14} className={cn('transition-transform', showRaw && 'rotate-180')} aria-hidden /> Recorded values ({rCurrent.readings.length})
+              <button className="flex items-center gap-2 text-[13px] text-ink-200 font-semibold hover:text-ink-100" aria-expanded={showRaw} onClick={() => setShowRaw((x) => !x)}>
+                <ChevronDown size={14} className={cn('transition-transform text-teal-lite', showRaw && 'rotate-180')} aria-hidden /> Recorded values ({rCurrent.readings.length})
               </button>
               {showRaw && (
-                <ul className="max-h-64 space-y-0.5 overflow-y-auto rounded-md bg-[var(--surface-sunken)] p-3 text-[12.5px]">
+                <ul className="max-h-64 space-y-1 overflow-y-auto rounded-lg border border-[var(--line)] bg-surface-sunken p-3 text-[12.5px]">
                   {[...rCurrent.readings].sort((a, b) => a.timestamp.localeCompare(b.timestamp)).slice(0, 200).map((r) => (
-                    <li key={r.id}>
-                      <span className="num text-ink-400">{time(r.timestamp)}</span> · {r.station} · {Object.entries(r.values).map(([k, v]) => `${k} ${v}`).join(', ')} <span className="muted">({r.fileName}, {r.ref})</span>
+                    <li key={r.id} className="text-ink-200">
+                      <span className="num font-semibold text-ink-100">{time(r.timestamp)}</span> · <span className="font-medium text-ink-200">{r.station}</span> · {Object.entries(r.values).map(([k, v]) => `${k} ${v}`).join(', ')} <span className="muted text-ink-400">({r.fileName}, {r.ref})</span>
                     </li>
                   ))}
                 </ul>
@@ -174,7 +181,7 @@ export function IncidentDayTimeline({ incident }: { incident: Incident }) {
       {groups.map((g) => (
         <section key={g.day}>
           <h4 className="eyebrow mb-2">{dayLabel(g.day)}</h4>
-          <ol className="space-y-2.5">{g.events.map((e) => <EventRow key={e.id} e={e} showIncident={false} />)}</ol>
+          <ol className="space-y-2.5 border-l-2 border-[var(--line)] pl-0 [&>li]:ml-[-6px]">{g.events.map((e) => <EventRow key={e.id} e={e} showIncident={false} />)}</ol>
         </section>
       ))}
     </div>
@@ -185,9 +192,8 @@ const STAGES = ['Report Submitted', 'Assessment', 'Investigation', 'Resolution']
 
 /**
  * Four-step progress derived from the incident status, with the date each
- * step was reached. Completed steps are teal; the active step carries a
- * restrained purple ring. Rejected or reopened cases fall back to
- * Investigation and are never shown as resolved.
+ * step was reached. Completed steps are muted teal; the active step carries a
+ * distinctive dusty rose highlight.
  */
 export function StageProgress({ incident, compact }: { incident: Incident; compact?: boolean }) {
   const firstAt = (pred: (s: string) => boolean) => incident.history.find((h) => pred(h.status))?.timestamp;
@@ -219,22 +225,44 @@ export function StageProgress({ incident, compact }: { incident: Incident; compa
                   'absolute',
                   compact ? 'left-1/2 top-[13px] h-[3px] w-full' : 'left-[14px] top-8 h-[calc(100%-2rem)] w-[3px] sm:left-1/2 sm:top-[14px] sm:h-[3px] sm:w-full',
                 )}
-                style={{ background: i < active - 1 ? 'var(--color-accent)' : i === active - 1 ? 'linear-gradient(90deg, var(--color-accent), var(--color-purple))' : 'var(--color-ink-700)' }}
+                style={{
+                  background:
+                    i < active - 1
+                      ? 'var(--color-muted-teal)'
+                      : i === active - 1
+                        ? 'linear-gradient(90deg, #376E6F, #DA7B93)'
+                        : 'rgb(47 68 84 / 0.18)',
+                }}
               />
             )}
             <span
               className={cn(
-                'relative z-[1] flex shrink-0 items-center justify-center rounded-full text-[13px] font-bold transition-colors duration-300 [font-family:var(--font-nav)]',
+                'relative z-[1] flex shrink-0 items-center justify-center rounded-full text-[13px] font-bold transition-all duration-300 [font-family:var(--font-nav)]',
                 compact ? 'h-7 w-7' : 'h-[30px] w-[30px]',
-                done ? 'bg-accent text-white' : current ? 'bg-white text-purple ring-[3px] ring-purple/60' : 'bg-ink-800 text-ink-400 ring-1 ring-ink-600',
+                done
+                  ? 'bg-muted-teal text-white shadow-sm ring-2 ring-muted-teal'
+                  : current
+                    ? 'bg-[var(--surface)] text-dusty-rose ring-[3px] ring-dusty-rose shadow-md'
+                    : 'bg-[var(--surface)] text-ink-400 ring-1 ring-[var(--line-strong)]',
               )}
               aria-current={current ? 'step' : undefined}
             >
               {i + 1}
             </span>
             <span className={cn(compact ? 'mt-1' : 'sm:mt-1.5')}>
-              <span className={cn('block text-[12px] leading-tight [font-family:var(--font-nav)]', done ? 'font-bold text-ink-100' : current ? 'font-bold text-purple' : 'text-ink-400')}>{s}</span>
-              {!compact && <span className="muted block !text-[11px]">{done && dates[i] ? new Date(dates[i]!).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : current ? 'In progress' : '—'}</span>}
+              <span
+                className={cn(
+                  'block text-[12px] leading-tight [font-family:var(--font-nav)]',
+                  done ? 'font-bold text-ink-100' : current ? 'font-bold text-dusty-rose' : 'text-ink-400',
+                )}
+              >
+                {s}
+              </span>
+              {!compact && (
+                <span className="muted block !text-[11px] text-ink-400">
+                  {done && dates[i] ? new Date(dates[i]!).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : current ? 'In progress' : '—'}
+                </span>
+              )}
             </span>
           </li>
         );

@@ -40,29 +40,29 @@ export function FilterBar({ value, onChange, showDepartment = true, compact }: {
     <div className={cn('grid gap-2', compact ? 'grid-cols-2' : 'sm:grid-cols-2 lg:grid-cols-[minmax(180px,1.4fr)_repeat(4,minmax(0,1fr))_auto]')}>
       <label className={cn('relative', compact && 'col-span-2')}>
         <span className="sr-only">Search incidents</span>
-        <Search size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-500" aria-hidden />
-        <input className="input !pl-8" placeholder="Search ID, text, location, officer…" value={value.q} onChange={(e) => set('q', e.target.value)} />
+        <Search size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-400" aria-hidden />
+        <input className="input !pl-8 border-[var(--line-strong)] focus:border-muted-teal" placeholder="Search ID, text, location, officer…" value={value.q} onChange={(e) => set('q', e.target.value)} />
       </label>
-      <select aria-label="Filter by category" className="input" value={value.category} onChange={(e) => set('category', e.target.value as IncidentCategory | '')}>
+      <select aria-label="Filter by category" className="input border-[var(--line-strong)] focus:border-muted-teal text-ink-100 font-medium" value={value.category} onChange={(e) => set('category', e.target.value as IncidentCategory | '')}>
         <option value="">All categories</option>
         {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
       </select>
-      <select aria-label="Filter by severity" className="input" value={value.severity} onChange={(e) => set('severity', e.target.value as Severity | '')}>
+      <select aria-label="Filter by severity" className="input border-[var(--line-strong)] focus:border-muted-teal text-ink-100 font-medium" value={value.severity} onChange={(e) => set('severity', e.target.value as Severity | '')}>
         <option value="">All severities</option>
         {SEVERITIES.map((s) => <option key={s}>{s}</option>)}
       </select>
-      <select aria-label="Filter by status" className="input" value={value.status} onChange={(e) => set('status', e.target.value as IncidentStatus | '')}>
+      <select aria-label="Filter by status" className="input border-[var(--line-strong)] focus:border-muted-teal text-ink-100 font-medium" value={value.status} onChange={(e) => set('status', e.target.value as IncidentStatus | '')}>
         <option value="">All statuses</option>
         {INCIDENT_STATUSES.map((s) => <option key={s}>{s}</option>)}
       </select>
       {showDepartment && (
-        <select aria-label="Filter by department" className="input" value={value.department} onChange={(e) => set('department', e.target.value)}>
+        <select aria-label="Filter by department" className="input border-[var(--line-strong)] focus:border-muted-teal text-ink-100 font-medium" value={value.department} onChange={(e) => set('department', e.target.value)}>
           <option value="">All departments</option>
           {DEPARTMENTS.map((d) => <option key={d}>{d}</option>)}
         </select>
       )}
       {active && (
-        <button className="btn btn-ghost" onClick={() => onChange(EMPTY_FILTERS)}>
+        <button className="btn btn-ghost hover:bg-deep-burgundy-soft hover:text-deep-burgundy hover:border-deep-burgundy/30" onClick={() => onChange(EMPTY_FILTERS)}>
           <X size={14} aria-hidden /> Clear
         </button>
       )}
@@ -92,9 +92,9 @@ export function IncidentTable({ incidents, onOpen, highlightId }: { incidents: I
     const activeKey = sort.key === key;
     const Icon = !activeKey ? ArrowUpDown : sort.dir === 1 ? ArrowUp : ArrowDown;
     return (
-      <th scope="col" aria-sort={activeKey ? (sort.dir === 1 ? 'ascending' : 'descending') : 'none'} className="px-3 py-2 font-medium">
-        <button className="inline-flex items-center gap-1 hover:text-ink-100" onClick={() => setSort((s) => ({ key, dir: s.key === key ? (s.dir === 1 ? -1 : 1) : -1 }))}>
-          {label} <Icon size={11} aria-hidden />
+      <th scope="col" aria-sort={activeKey ? (sort.dir === 1 ? 'ascending' : 'descending') : 'none'} className="px-3.5 py-2.5 font-bold">
+        <button className="inline-flex items-center gap-1 text-ink-100 hover:text-teal-lite font-bold transition-colors" onClick={() => setSort((s) => ({ key, dir: s.key === key ? (s.dir === 1 ? -1 : 1) : -1 }))}>
+          {label} <Icon size={11} aria-hidden className={activeKey ? 'text-dusty-rose' : 'text-ink-400'} />
         </button>
       </th>
     );
@@ -105,13 +105,13 @@ export function IncidentTable({ incidents, onOpen, highlightId }: { incidents: I
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[860px] text-left text-sm">
-        <thead className="text-xs text-ink-400">
-          <tr className="border-b border-[var(--line)]">
+        <thead className="text-xs text-ink-100 font-bold bg-deep-teal/50 border-b border-[var(--line)]">
+          <tr>
             {head('id', 'Incident')}
-            <th scope="col" className="px-3 py-2 font-medium">Category · location</th>
+            <th scope="col" className="px-3.5 py-2.5 font-bold">Category · location</th>
             {head('severity', 'Severity')}
             {head('status', 'Status')}
-            <th scope="col" className="px-3 py-2 font-medium">Assigned</th>
+            <th scope="col" className="px-3.5 py-2.5 font-bold">Assigned</th>
             {head('deadline', 'Deadline')}
             {head('reported', 'Reported')}
           </tr>
@@ -126,31 +126,34 @@ export function IncidentTable({ incidents, onOpen, highlightId }: { incidents: I
                 tabIndex={0}
                 onClick={() => onOpen(i.id)}
                 onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onOpen(i.id))}
-                className={cn('cursor-pointer border-b border-[var(--line)] transition-colors hover:bg-ink-800/60 focus:bg-ink-800/60 focus:outline-none', highlightId === i.id && 'bg-accent-soft')}
+                className={cn(
+                  'cursor-pointer border-b border-[var(--line)] transition-colors hover:bg-muted-teal/20 focus:bg-muted-teal/20 focus:outline-none',
+                  highlightId === i.id && 'bg-dusty-rose/15/80 shadow-[inset_3px_0_0_#DA7B93]',
+                )}
               >
-                <td className="px-3 py-2.5">
-                  <span className="num whitespace-nowrap font-semibold text-ink-100">{i.id}</span>
+                <td className="px-3.5 py-2.5">
+                  <span className="num whitespace-nowrap font-bold text-ink-100 hover:text-teal-lite">{i.id}</span>
                 </td>
-                <td className="max-w-[280px] px-3 py-2.5">
-                  <p className="truncate text-ink-100">{i.analysis?.category ?? (i.analysisState === 'pending' ? 'Analysing…' : 'Unclassified')}</p>
+                <td className="max-w-[280px] px-3.5 py-2.5">
+                  <p className="truncate font-medium text-ink-100">{i.analysis?.category ?? (i.analysisState === 'pending' ? 'Analysing…' : 'Unclassified')}</p>
                   <p className="truncate text-xs text-ink-400" title={i.complaint.location.address}>{i.complaint.location.address}</p>
                 </td>
-                <td className="px-3 py-2.5">{i.analysis ? <SeverityBadge severity={i.analysis.severity} /> : <span className="text-xs text-ink-500">—</span>}</td>
-                <td className="px-3 py-2.5"><StatusBadge status={i.status} /></td>
-                <td className="px-3 py-2.5 text-xs">
+                <td className="px-3.5 py-2.5">{i.analysis ? <SeverityBadge severity={i.analysis.severity} /> : <span className="text-xs text-ink-500">—</span>}</td>
+                <td className="px-3.5 py-2.5"><StatusBadge status={i.status} /></td>
+                <td className="px-3.5 py-2.5 text-xs">
                   {i.assignment ? (
                     <>
-                      <p className="text-ink-100">{i.assignment.officerName}</p>
+                      <p className="font-medium text-ink-100">{i.assignment.officerName}</p>
                       <p className="max-w-[180px] truncate text-ink-400">{i.assignment.department}</p>
                     </>
                   ) : (
-                    <span className="text-sev-medium">Unassigned</span>
+                    <span className="text-sev-medium font-medium">Unassigned</span>
                   )}
                 </td>
-                <td className={cn('num whitespace-nowrap px-3 py-2.5 text-xs', overdue ? 'text-sev-critical' : 'text-ink-300')}>
+                <td className={cn('num whitespace-nowrap px-3.5 py-2.5 text-xs', overdue ? 'text-sev-critical font-bold' : 'text-ink-200')}>
                   {i.assignment ? `${i.assignment.deadline}${overdue ? ' · overdue' : ''}` : '—'}
                 </td>
-                <td className="num px-3 py-2.5 text-xs text-ink-300">{fmtDateTime(i.complaint.timestamp)}</td>
+                <td className="num px-3.5 py-2.5 text-xs text-ink-300">{fmtDateTime(i.complaint.timestamp)}</td>
               </tr>
             );
           })}

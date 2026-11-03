@@ -136,12 +136,12 @@ const DOTS = 'flex items-center';
 const DOT = `group/dot grid h-5 w-5 cursor-pointer place-items-center rounded-full border-none bg-transparent p-0 ${FOCUS}`;
 const DOT_MARK_BASE = 'h-2 w-2 rounded-full transition-[background-color,transform] duration-200';
 const DOT_MARK = `${DOT_MARK_BASE} bg-[var(--carousel-faint)] group-hover/dot:bg-[var(--carousel-soft)]`;
-const DOT_MARK_ACTIVE = `${DOT_MARK_BASE} scale-[1.2] bg-[var(--carousel-ink)]`;
+const DOT_MARK_ACTIVE = `${DOT_MARK_BASE} scale-[1.2] bg-[#DA7B93]`;
 const BARS = 'flex min-w-0 flex-1 gap-1.5';
 const BAR = `group/bar flex h-5 flex-1 cursor-pointer items-center border-none bg-transparent p-0 ${FOCUS}`;
 const BAR_TRACK =
   'relative h-[3px] w-full overflow-hidden rounded-[3px] bg-[var(--carousel-faint)] transition-colors duration-200 group-hover/bar:bg-[var(--carousel-soft)]';
-const BAR_FILL = 'absolute inset-0 origin-left bg-[var(--carousel-ink)]';
+const BAR_FILL = 'absolute inset-0 origin-left bg-[#DA7B93]';
 const COUNTER = 'flex items-baseline gap-1.5 overflow-hidden text-[13px] tabular-nums text-[var(--carousel-muted)]';
 const COUNTER_CURRENT = 'inline-block text-[var(--carousel-ink)]';
 
@@ -199,20 +199,20 @@ const THEMES: Record<string, Record<string, string>> = {
     '--carousel-press': 'brightness(0.8)'
   },
   light: {
-    '--carousel-frame': 'rgba(240, 240, 243, 0.8)',
-    '--carousel-frame-edge': 'rgba(24, 24, 27, 0.07)',
+    '--carousel-frame': 'rgba(235, 242, 242, 0.9)',
+    '--carousel-frame-edge': 'rgba(47, 68, 84, 0.14)',
     '--carousel-frame-highlight': 'rgba(255, 255, 255, 0.95)',
-    '--carousel-frame-shadow': '0 22px 44px -22px rgba(24, 24, 27, 0.3), 0 6px 16px -10px rgba(24, 24, 27, 0.16)',
-    '--carousel-tile': 'linear-gradient(180deg, #ffffff 0%, #f6f6f8 100%)',
-    '--carousel-tile-edge': 'rgba(24, 24, 27, 0.08)',
+    '--carousel-frame-shadow': '0 20px 40px -20px rgba(28, 51, 52, 0.2), 0 6px 16px -10px rgba(28, 51, 52, 0.1)',
+    '--carousel-tile': 'linear-gradient(180deg, #ffffff 0%, #f4f8f8 100%)',
+    '--carousel-tile-edge': 'rgba(47, 68, 84, 0.15)',
     '--carousel-tile-highlight': 'rgba(255, 255, 255, 1)',
-    '--carousel-tile-shadow': '0 4px 10px -5px rgba(24, 24, 27, 0.25)',
-    '--carousel-ink': '#27272a',
-    '--carousel-muted': 'rgba(39, 39, 42, 0.6)',
-    '--carousel-faint': 'rgba(24, 24, 27, 0.16)',
-    '--carousel-soft': 'rgba(24, 24, 27, 0.34)',
-    '--carousel-badge': 'rgba(24, 24, 27, 0.05)',
-    '--carousel-hover': 'brightness(0.97)',
+    '--carousel-tile-shadow': '0 4px 12px -4px rgba(28, 51, 52, 0.15)',
+    '--carousel-ink': '#1C3334',
+    '--carousel-muted': '#2F4454',
+    '--carousel-faint': 'rgba(47, 68, 84, 0.2)',
+    '--carousel-soft': '#376E6F',
+    '--carousel-badge': 'rgba(55, 110, 111, 0.12)',
+    '--carousel-hover': 'brightness(0.98)',
     '--carousel-press': 'brightness(0.92)'
   }
 };
