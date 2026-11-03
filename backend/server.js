@@ -27,8 +27,13 @@ const errorHandler = require('./middleware/errorHandler');
 const { isConfigured, checkDatabaseConnection } = require('./config/supabase');
 
 // ── Route modules ─────────────────────────────────────────────────────────────
+const authRoutes = require('./routes/auth.routes');
 const intelligenceRoutes = require('./routes/intelligence.routes');
 const complaintsRoutes = require('./routes/complaints.routes');
+const incidentsRoutes = require('./routes/incidents.routes');
+const assignmentsRoutes = require('./routes/assignments.routes');
+const fieldUpdatesRoutes = require('./routes/fieldUpdates.routes');
+const readingsRoutes = require('./routes/readings.routes');
 const reportsRoutes = require('./routes/reports.routes');
 
 // ── App setup ─────────────────────────────────────────────────────────────────
@@ -92,8 +97,13 @@ app.get('/api/health', async (req, res) => {
       latencyMs: dbHealth.latencyMs,
     },
     modules: {
+      auth: '/api/auth/health',
       intelligence: '/api/intelligence/health',
       complaints: '/api/complaints/health',
+      incidents: '/api/incidents/health',
+      assignments: '/api/assignments/health',
+      field_updates: '/api/field-updates/health',
+      readings: '/api/readings/health',
       reports: '/api/reports/health',
     },
   });
@@ -115,8 +125,13 @@ app.get('/api/health/db', async (req, res) => {
 });
 
 // Module routers
+app.use('/api/auth', authRoutes);
 app.use('/api/intelligence', intelligenceRoutes);
 app.use('/api/complaints', complaintsRoutes);
+app.use('/api/incidents', incidentsRoutes);
+app.use('/api/assignments', assignmentsRoutes);
+app.use('/api/field-updates', fieldUpdatesRoutes);
+app.use('/api/readings', readingsRoutes);
 app.use('/api/reports', reportsRoutes);
 
 // ── 404 handler (must come after all routes) ──────────────────────────────────

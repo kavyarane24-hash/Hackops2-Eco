@@ -55,6 +55,26 @@ function getSupabase() {
 }
 
 /**
+ * Returns a Supabase client scoped to the caller's JWT token (if provided),
+ * allowing Row-Level Security (RLS) to evaluate auth.uid() and current_user_role().
+ */
+function getScopedClient(req) {
+  const authHeader = req?.headers?.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ') && isConfigured) {
+    return createClient(supabaseUrl, supabaseKey, {
+      global: {
+        headers: { Authorization: authHeader },
+      },
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    });
+  }
+  return supabase;
+}
+
+/**
  * Lightweight connectivity check against the Supabase database
  * Safely uses the configured client without exposing credentials or requiring service_role key
  */
@@ -101,5 +121,6 @@ module.exports = {
   supabase,
   isConfigured,
   getSupabase,
+  getScopedClient,
   checkDatabaseConnection,
 };
