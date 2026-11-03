@@ -13,24 +13,26 @@
 
 'use strict';
 
+const path = require('path');
+
 // ── Environment variables – must load before anything else ────────────────────
-require('dotenv').config();
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
-const express  = require('express');
-const cors     = require('cors');
-const morgan   = require('morgan');
-const path     = require('path');
+const express = require('express');
+const cors = require('cors');
+const morgan = require('morgan');
 
-const logger       = require('./utils/logger');
+const logger = require('./utils/logger');
 const errorHandler = require('./middleware/errorHandler');
+const { isConfigured, checkDatabaseConnection } = require('./config/supabase');
 
 // ── Route modules ─────────────────────────────────────────────────────────────
 const intelligenceRoutes = require('./routes/intelligence.routes');
-const complaintsRoutes   = require('./routes/complaints.routes');
-const reportsRoutes      = require('./routes/reports.routes');
+const complaintsRoutes = require('./routes/complaints.routes');
+const reportsRoutes = require('./routes/reports.routes');
 
 // ── App setup ─────────────────────────────────────────────────────────────────
-const app  = express();
+const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
@@ -47,7 +49,7 @@ app.use(cors({
       callback(new Error(`CORS: origin ${origin} not allowed`));
     }
   },
-  methods:     ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
@@ -67,40 +69,61 @@ app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 // Root health check
 app.get('/', (req, res) => {
   res.status(200).json({
-    success:   true,
-    system:    'Eco Intelligence & Compliance Management System',
-    status:    'operational',
-    message:   'Air Pollution Intelligence & Compliance API is running',
+    success: true,
+    system: 'Eco Intelligence & Compliance Management System',
+    status: 'operational',
+    message: 'Air Pollution Intelligence & Compliance API is running',
     timestamp: new Date().toISOString(),
   });
 });
 
-// Top-level system health check (no module prefix)
-app.get('/api/health', (req, res) => {
+// Top-level system health check (includes database status)
+app.get('/api/health', async (req, res) => {
+  const dbHealth = await checkDatabaseConnection();
   res.status(200).json({
-    success:   true,
-    system:    'Eco Intelligence & Compliance Management System',
-    status:    'operational',
-    version:   '1.0.0-phase1',
+    success: true,
+    system: 'Eco Intelligence & Compliance Management System',
+    status: 'operational',
+    version: '1.0.0-phase1',
     timestamp: new Date().toISOString(),
+    database: {
+      configured: dbHealth.configured,
+      connected: dbHealth.connected,
+      latencyMs: dbHealth.latencyMs,
+    },
     modules: {
       intelligence: '/api/intelligence/health',
-      complaints:   '/api/complaints/health',
-      reports:      '/api/reports/health',
+      complaints: '/api/complaints/health',
+      reports: '/api/reports/health',
     },
+  });
+});
+
+// Dedicated database connectivity health endpoint
+app.get('/api/health/db', async (req, res) => {
+  const dbHealth = await checkDatabaseConnection();
+  const statusCode = dbHealth.connected ? 200 : 503;
+  res.status(statusCode).json({
+    success: dbHealth.connected,
+    database: 'supabase',
+    configured: dbHealth.configured,
+    connected: dbHealth.connected,
+    latencyMs: dbHealth.latencyMs,
+    message: dbHealth.message,
+    timestamp: new Date().toISOString(),
   });
 });
 
 // Module routers
 app.use('/api/intelligence', intelligenceRoutes);
-app.use('/api/complaints',   complaintsRoutes);
-app.use('/api/reports',      reportsRoutes);
+app.use('/api/complaints', complaintsRoutes);
+app.use('/api/reports', reportsRoutes);
 
 // ── 404 handler (must come after all routes) ──────────────────────────────────
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    error:   `Route not found: ${req.method} ${req.originalUrl}`,
+    error: `Route not found: ${req.method} ${req.originalUrl}`,
   });
 });
 
@@ -109,10 +132,19 @@ app.use(errorHandler);
 
 // ── Start server (only when run directly, not when required by tests) ─────────
 if (require.main === module) {
-  app.listen(PORT, () => {
+  app.listen(PORT, async () => {
     logger.info(`Server running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`);
-    logger.info(`System health : http://localhost:${PORT}/api/health`);
-    logger.info(`Intelligence  : http://localhost:${PORT}/api/intelligence/health`);
+    logger.info(`System health   : http://localhost:${PORT}/api/health`);
+    logger.info(`Database health : http://localhost:${PORT}/api/health/db`);
+    logger.info(`Intelligence    : http://localhost:${PORT}/api/intelligence/health`);
+
+    // Verify initial database connection on boot
+    const dbHealth = await checkDatabaseConnection();
+    if (dbHealth.connected) {
+      logger.info(`Supabase connection verified (${dbHealth.latencyMs}ms)`);
+    } else {
+      logger.warn(`Supabase connection check: ${dbHealth.message}`);
+    }
   });
 }
 
