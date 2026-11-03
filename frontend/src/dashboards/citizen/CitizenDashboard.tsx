@@ -8,6 +8,7 @@ import { citizenCopy } from '@/content/content';
 import { Panel, Field, Spinner } from '@/components/common/Panel';
 import { MediaUploader } from '@/components/common/Media';
 import { LocationPicker } from '@/components/maps/LocationPicker';
+import { LiveEnvironmentalCard } from '@/components/common/LiveEnvironmentalCard';
 import { useLenis, useReveal } from '@/hooks/motion';
 import { isValidCoord } from '@/utils';
 import { cn } from '@/lib/utils';
@@ -168,6 +169,16 @@ export default function CitizenDashboard() {
                   invalid={!!errors.location}
                 />
               </div>
+              {isValidCoord(lat, lng) && (
+                <div className="mt-3">
+                  <LiveEnvironmentalCard
+                    lat={lat}
+                    lon={lng}
+                    locationName={address || 'Selected complaint coordinates'}
+                    compact
+                  />
+                </div>
+              )}
               {errors.location && <p role="alert" className="mt-1 text-xs text-[#b42318]">{errors.location}</p>}
             </div>
 

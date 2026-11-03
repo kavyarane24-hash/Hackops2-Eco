@@ -35,6 +35,7 @@ const assignmentsRoutes = require('./routes/assignments.routes');
 const fieldUpdatesRoutes = require('./routes/fieldUpdates.routes');
 const readingsRoutes = require('./routes/readings.routes');
 const reportsRoutes = require('./routes/reports.routes');
+const cpcbRoutes = require('./routes/cpcb.routes');
 
 // ── App setup ─────────────────────────────────────────────────────────────────
 const app = express();
@@ -138,6 +139,7 @@ app.use('/api/assignments', assignmentsRoutes);
 app.use('/api/field-updates', fieldUpdatesRoutes);
 app.use('/api/readings', readingsRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/cpcb', cpcbRoutes);
 
 // ── 404 handler (must come after all routes) ──────────────────────────────────
 app.use((req, res) => {

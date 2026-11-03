@@ -1,12 +1,25 @@
 import { useEffect, useMemo } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Circle, Popup, Tooltip, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, CircleMarker, Circle, Popup, Tooltip, useMap, useMapEvents } from 'react-leaflet';
 import type { LatLngExpression } from 'leaflet';
 import type { Incident, Severity } from '@/types';
+import type { NormalizedHotspot } from '@/services/api';
+import type { CpcbStation } from '@/services/cpcb';
 import { DEFAULT_CENTER, DEFAULT_ZOOM, SEVERITY_COLOR, SEVERITY_RANK } from '@/config/constants';
 import { fmtDateTime, isValidCoord } from '@/utils';
 
 export const OSM_TILES = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 export const OSM_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
+function MapClickHandler({ onMapClick }: { onMapClick?: (lat: number, lng: number) => void }) {
+  useMapEvents({
+    click(e) {
+      if (onMapClick) {
+        onMapClick(Number(e.latlng.lat.toFixed(5)), Number(e.latlng.lng.toFixed(5)));
+      }
+    },
+  });
+  return null;
+}
 
 /** Keeps Leaflet sized correctly when its container resizes (drawers, grids). */
 export function MapAutoResize() {
@@ -66,9 +79,28 @@ interface Props {
   onOpenDetails: (id: string) => void;
   showHotspots?: boolean;
   className?: string;
+  fireHotspots?: NormalizedHotspot[];
+  selectedLocation?: [number, number] | null;
+  onMapClick?: (lat: number, lng: number) => void;
+  cpcbStations?: CpcbStation[];
+  showCpcbStations?: boolean;
+  onCpcbStationSelect?: (station: CpcbStation) => void;
 }
 
-export function IncidentMap({ incidents, selectedId, onSelect, onOpenDetails, showHotspots = true, className }: Props) {
+export function IncidentMap({ 
+  incidents, 
+  selectedId, 
+  onSelect, 
+  onOpenDetails, 
+  showHotspots = true, 
+  className,
+  fireHotspots,
+  selectedLocation,
+  onMapClick,
+  cpcbStations,
+  showCpcbStations = false,
+  onCpcbStationSelect,
+}: Props) {
   const located = useMemo(() => incidents.filter((i) => isValidCoord(i.complaint.location.lat, i.complaint.location.lng)), [incidents]);
   const hotspots = useMemo(() => (showHotspots ? computeHotspots(incidents) : []), [incidents, showHotspots]);
   const selected = located.find((i) => i.id === selectedId);
@@ -78,6 +110,133 @@ export function IncidentMap({ incidents, selectedId, onSelect, onOpenDetails, sh
       <TileLayer url={OSM_TILES} attribution={OSM_ATTRIBUTION} maxZoom={19} />
       <MapAutoResize />
       <FlyToSelected incident={selected} />
+      {onMapClick && <MapClickHandler onMapClick={onMapClick} />}
+
+      {/* CPCB CAAQMS Monitoring Stations */}
+      {showCpcbStations && cpcbStations?.map((s) => (
+        <CircleMarker
+          key={`cpcb-${s.id}`}
+          center={[s.latitude, s.longitude]}
+          radius={6}
+          pathOptions={{
+            color: s.aqiColor || '#087f8c',
+            weight: 1.5,
+            fillColor: s.aqiColor || '#087f8c',
+            fillOpacity: 0.8,
+          }}
+          eventHandlers={{
+            click: () => onCpcbStationSelect?.(s),
+          }}
+        >
+          <Tooltip direction="top" offset={[0, -6]}>
+            <div className="text-[11px] font-sans">
+              <strong>{s.station}</strong> ({s.city})
+              <div>CPCB AQI: {s.calculatedAqi ?? 'N/A'} ({s.aqiCategory})</div>
+            </div>
+          </Tooltip>
+          <Popup minWidth={240}>
+            <div className="space-y-1.5 text-xs">
+              <div className="flex items-center justify-between border-b border-[var(--line)] pb-1">
+                <span className="font-semibold text-ink-100 truncate max-w-[160px]">{s.station}</span>
+                <span className="font-mono text-xs font-bold" style={{ color: s.aqiColor }}>
+                  AQI {s.calculatedAqi ?? 'N/A'}
+                </span>
+              </div>
+              <div className="text-[11px] text-ink-300">
+                {s.city}, {s.state} · <span className="font-medium text-emerald-400">Official CPCB CAAQMS</span>
+              </div>
+              <div className="grid grid-cols-3 gap-1 rounded bg-ink-900/60 p-1.5 text-center text-[10px]">
+                <div>
+                  <div className="text-ink-400">PM2.5</div>
+                  <div className="font-mono font-bold text-ink-100">{s.pollutants['PM2.5']?.avg ?? 'N/A'}</div>
+                </div>
+                <div>
+                  <div className="text-ink-400">PM10</div>
+                  <div className="font-mono font-bold text-ink-100">{s.pollutants['PM10']?.avg ?? 'N/A'}</div>
+                </div>
+                <div>
+                  <div className="text-ink-400">NO₂</div>
+                  <div className="font-mono font-bold text-ink-100">{s.pollutants['NO2']?.avg ?? 'N/A'}</div>
+                </div>
+                <div>
+                  <div className="text-ink-400">SO₂</div>
+                  <div className="font-mono font-bold text-ink-100">{s.pollutants['SO2']?.avg ?? 'N/A'}</div>
+                </div>
+                <div>
+                  <div className="text-ink-400">CO</div>
+                  <div className="font-mono font-bold text-ink-100">{s.pollutants['CO']?.avg ?? 'N/A'}</div>
+                </div>
+                <div>
+                  <div className="text-ink-400">O₃</div>
+                  <div className="font-mono font-bold text-ink-100">{s.pollutants['OZONE']?.avg ?? 'N/A'}</div>
+                </div>
+              </div>
+              <div className="text-[10px] text-ink-400">
+                Updated: {s.lastUpdate} (CPCB Bulletin)
+              </div>
+              {onCpcbStationSelect && (
+                <button
+                  type="button"
+                  className="btn btn-ghost !min-h-7 w-full !text-[11px] mt-1"
+                  onClick={() => onCpcbStationSelect(s)}
+                >
+                  Inspect Live Atmosphere Here
+                </button>
+              )}
+            </div>
+          </Popup>
+        </CircleMarker>
+      ))}
+
+      {selectedLocation && (
+        <CircleMarker
+          center={selectedLocation}
+          radius={14}
+          pathOptions={{ color: '#087f8c', weight: 3, fillColor: '#087f8c', fillOpacity: 0.25 }}
+        >
+          <Tooltip direction="top" offset={[0, -10]}>
+            Selected inspection target ({selectedLocation[0].toFixed(4)}, {selectedLocation[1].toFixed(4)})
+          </Tooltip>
+        </CircleMarker>
+      )}
+
+      {/* NASA FIRMS Thermal Satellite Fire Hotspots */}
+      {fireHotspots?.map((f, idx) => (
+        <CircleMarker
+          key={`fire-${idx}-${f.latitude}-${f.longitude}`}
+          center={[f.latitude, f.longitude]}
+          radius={8}
+          pathOptions={{
+            color: '#ef4444',
+            weight: 2,
+            fillColor: '#f97316',
+            fillOpacity: 0.85,
+          }}
+        >
+          <Tooltip direction="top" offset={[0, -8]}>
+            🔥 NASA FIRMS: {f.satellite} ({f.confidence} conf)
+          </Tooltip>
+          <Popup minWidth={220}>
+            <div className="space-y-1 text-xs">
+              <strong className="text-orange-400">🔥 NASA FIRMS Thermal Anomaly</strong>
+              <div className="text-[11px] text-ink-300">
+                Satellite fire detection by {f.satellite} ({f.instrument || 'VIIRS'})
+              </div>
+              <div className="grid grid-cols-2 gap-1 text-[11px]">
+                <div>Confidence: <strong className="text-ink-100">{f.confidence}</strong></div>
+                <div>FRP: <strong className="text-ink-100">{f.fireRadiativePowerMw ? `${f.fireRadiativePowerMw} MW` : 'N/A'}</strong></div>
+                <div>Brightness: <strong className="text-ink-100">{f.brightnessKelvin ? `${Math.round(f.brightnessKelvin)} K` : 'N/A'}</strong></div>
+                <div>Distance: <strong className="text-ink-100">{f.distanceKm.toFixed(1)} km</strong></div>
+              </div>
+              {f.isPotentialUpwind && (
+                <div className="text-[10px] text-sev-critical font-medium">
+                  ⚠️ Potential upwind plume relative to wind origin
+                </div>
+              )}
+            </div>
+          </Popup>
+        </CircleMarker>
+      ))}
 
       {hotspots.map((h) => (
         <Circle

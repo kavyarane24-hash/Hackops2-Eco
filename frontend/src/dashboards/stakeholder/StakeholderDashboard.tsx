@@ -1,5 +1,5 @@
-import { useMemo, useRef, useState } from 'react';
-import { Layers, MapPinOff, X } from 'lucide-react';
+import { useMemo, useRef, useState, useEffect } from 'react';
+import { Layers, MapPinOff, X, Compass, Radio } from 'lucide-react';
 import { useIncidentStore } from '@/context/IncidentStore';
 import { Panel } from '@/components/common/Panel';
 import { SeverityBadge, StatusBadge, UrgencyBadge } from '@/components/common/Badges';
@@ -8,6 +8,9 @@ import { buildEvents, EVENT_META } from '@/services/timeline';
 import { IncidentMap, computeHotspots } from '@/components/maps/IncidentMap';
 import { FilterBar, applyFilters, EMPTY_FILTERS, type IncidentFilters } from '@/components/incidents/IncidentTable';
 import { useIncidentParam } from '@/components/incidents/IncidentDrawer';
+import { LiveEnvironmentalCard } from '@/components/common/LiveEnvironmentalCard';
+import type { NormalizedHotspot } from '@/services/api';
+import { fetchCpcbData, type CpcbDatasetPayload } from '@/services/cpcb';
 import { DEPARTMENTS, OPEN_STATUSES, SEVERITIES, SEVERITY_COLOR } from '@/config/constants';
 import { useReveal } from '@/hooks/motion';
 import { daysUntil, fmtDate, fmtDateTime, isValidCoord } from '@/utils';
@@ -25,12 +28,34 @@ export default function StakeholderDashboard() {
   const [filters, setFilters] = useState<IncidentFilters>(EMPTY_FILTERS);
   const [selectedId, setSelectedId] = useState<string | undefined>();
   const [hotspots, setHotspots] = useState(true);
+  const [customCoord, setCustomCoord] = useState<[number, number] | null>(null);
+  const [fireHotspots, setFireHotspots] = useState<NormalizedHotspot[]>([]);
+  const [cpcbData, setCpcbData] = useState<CpcbDatasetPayload | null>(null);
+  const [showCpcbStations, setShowCpcbStations] = useState(true);
+
+  useEffect(() => {
+    void fetchCpcbData().then(setCpcbData);
+  }, []);
 
   const visible = useMemo(() => applyFilters(incidents, filters), [incidents, filters]);
   const missingCoords = visible.filter((i) => !isValidCoord(i.complaint.location.lat, i.complaint.location.lng));
   const selected = incidents.find((i) => i.id === selectedId);
   const hs = useMemo(() => computeHotspots(visible), [visible]);
   const recent = useMemo(() => buildEvents(incidents, []).slice(0, 8), [incidents]);
+
+  const inspectionCoord: [number, number] = useMemo(() => {
+    if (selected && isValidCoord(selected.complaint.location.lat, selected.complaint.location.lng)) {
+      return [selected.complaint.location.lat as number, selected.complaint.location.lng as number];
+    }
+    if (customCoord) return customCoord;
+    return [28.6139, 77.2090];
+  }, [selected, customCoord]);
+
+  const inspectionName = useMemo(() => {
+    if (selected) return selected.complaint.location.address || `Incident ${selected.id}`;
+    if (customCoord) return `Map Target (${customCoord[0].toFixed(3)}, ${customCoord[1].toFixed(3)})`;
+    return 'Delhi Central (NCR)';
+  }, [selected, customCoord]);
 
   const byDept = DEPARTMENTS.map((d) => {
     const list = incidents.filter((i) => i.assignment?.department === d);
@@ -70,21 +95,63 @@ export default function StakeholderDashboard() {
         </div>
       </div>
 
+      <div className="reveal">
+        <LiveEnvironmentalCard
+          lat={inspectionCoord[0]}
+          lon={inspectionCoord[1]}
+          locationName={inspectionName}
+          onHotspotsLoaded={setFireHotspots}
+        />
+      </div>
+
       <div className="panel reveal p-3">
         <FilterBar value={filters} onChange={setFilters} />
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="panel-solid reveal relative h-[62vh] min-h-[420px] overflow-hidden">
-          <IncidentMap incidents={visible} selectedId={selectedId} onSelect={setSelectedId} onOpenDetails={open} showHotspots={hotspots} />
+          <IncidentMap
+            incidents={visible}
+            selectedId={selectedId}
+            onSelect={(id) => {
+              setSelectedId(id);
+              setCustomCoord(null);
+            }}
+            onOpenDetails={open}
+            showHotspots={hotspots}
+            fireHotspots={fireHotspots}
+            selectedLocation={inspectionCoord}
+            onMapClick={(lat, lng) => {
+              setCustomCoord([lat, lng]);
+              setSelectedId(undefined);
+            }}
+            cpcbStations={cpcbData?.stations}
+            showCpcbStations={showCpcbStations}
+            onCpcbStationSelect={(st) => {
+              setCustomCoord([st.latitude, st.longitude]);
+              setSelectedId(undefined);
+            }}
+          />
           <div className="pointer-events-none absolute left-3 top-3 z-[500] flex flex-col gap-2">
-            <button
-              className="btn btn-ghost pointer-events-auto !min-h-8 bg-ink-900/90 !text-xs"
-              aria-pressed={hotspots}
-              onClick={() => setHotspots((v) => !v)}
-            >
-              <Layers size={14} aria-hidden /> Hotspots {hotspots ? 'on' : 'off'} ({hs.length})
-            </button>
+            <div className="flex gap-1.5">
+              <button
+                className="btn btn-ghost pointer-events-auto !min-h-8 bg-ink-900/90 !text-xs"
+                aria-pressed={hotspots}
+                onClick={() => setHotspots((v) => !v)}
+              >
+                <Layers size={14} aria-hidden /> Incidents ({hs.length})
+              </button>
+              <button
+                className="btn btn-ghost pointer-events-auto !min-h-8 bg-ink-900/90 !text-xs"
+                aria-pressed={showCpcbStations}
+                onClick={() => setShowCpcbStations((v) => !v)}
+              >
+                <Radio size={14} className={showCpcbStations ? 'text-emerald-400' : ''} aria-hidden /> CPCB Stations ({cpcbData?.stations.length ?? 501})
+              </button>
+            </div>
+            <span className="chip pointer-events-auto bg-ink-900/90 !text-[11px] text-ink-300">
+              <Compass size={11} className="text-accent" /> Click map or station to inspect live data
+            </span>
           </div>
           <div className="pointer-events-none absolute bottom-8 left-3 z-[500] flex flex-col gap-1">
             <span className="chip pointer-events-auto bg-ink-900/90 num">{visible.length - missingCoords.length} on map</span>

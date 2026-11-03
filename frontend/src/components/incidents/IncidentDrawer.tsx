@@ -11,6 +11,7 @@ import { MediaGrid } from '@/components/common/Media';
 import { AIAnalysisPanel, AnalysisState, ComplianceTable, EvidenceList } from './AnalysisPanels';
 import { AllocationForm, FieldUpdateList, VerificationActions } from './Workflow';
 import { downloadIncidentPdf } from '@/services/reports';
+import { LiveEnvironmentalCard } from '@/components/common/LiveEnvironmentalCard';
 import { fmtDate, fmtDateTime, isValidCoord } from '@/utils';
 import { useFlashOnChange } from '@/hooks/motion';
 import { cn } from '@/lib/utils';
@@ -140,6 +141,16 @@ export function IncidentDrawer({ role }: { role: Role }) {
                     {isValidCoord(c.location.lat, c.location.lng) ? `${c.location.lat!.toFixed(5)}, ${c.location.lng!.toFixed(5)}` : 'Coordinates missing or invalid'}
                     {c.location.simulated && ' · simulated demo coordinates'}
                   </p>
+                  {isValidCoord(c.location.lat, c.location.lng) && (
+                    <div className="mt-3">
+                      <LiveEnvironmentalCard
+                        lat={c.location.lat}
+                        lon={c.location.lng}
+                        locationName={c.location.address || `Incident ${incident.id}`}
+                        compact
+                      />
+                    </div>
+                  )}
                   {isValidCoord(c.location.lat, c.location.lng) && role === 'field' && (
                     <a
                       className="btn btn-ghost mt-2 !min-h-8 !text-xs"
