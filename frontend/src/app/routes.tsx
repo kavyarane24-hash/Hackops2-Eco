@@ -8,6 +8,8 @@ const CitizenDashboard = lazy(() => import('@/dashboards/citizen/CitizenDashboar
 const AdminLayout = lazy(() => import('@/dashboards/admin/AdminLayout'));
 const AdminDashboard = lazy(() => import('@/dashboards/admin/AdminDashboard'));
 const AdminAnalytics = lazy(() => import('@/dashboards/admin/AdminAnalytics'));
+const ActionManagement = lazy(() => import('@/dashboards/admin/ActionManagement'));
+const AdminTimeline = lazy(() => import('@/dashboards/admin/AdminTimeline'));
 const DataImport = lazy(() => import('@/dashboards/admin/DataImport'));
 const IncidentReports = lazy(() => import('@/dashboards/admin/IncidentReports'));
 const StakeholderDashboard = lazy(() => import('@/dashboards/stakeholder/StakeholderDashboard'));
@@ -37,6 +39,8 @@ export const router = createBrowserRouter([
         element: page(<AdminLayout />),
         children: [
           { index: true, element: page(<AdminDashboard />) },
+          { path: 'actions', element: page(<ActionManagement />) },
+          { path: 'timeline', element: page(<AdminTimeline />) },
           { path: 'analytics', element: page(<AdminAnalytics />) },
           { path: 'import', element: page(<DataImport />) },
           { path: 'reports', element: page(<IncidentReports />) },

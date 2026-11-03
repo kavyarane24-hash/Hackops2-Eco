@@ -1,21 +1,20 @@
 import { useMemo, useRef, useState, type FormEvent } from 'react';
-import { CheckCircle2, ChevronRight, Copy, Languages, Send, Wand2 } from 'lucide-react';
+import { CheckCircle2, ChevronRight, Copy, Languages, Send } from 'lucide-react';
 import type { Language, MediaFile } from '@/types';
 import { useIncidentStore } from '@/context/IncidentStore';
 import { toast, useUI } from '@/context/uiStore';
-import { citizenCopy, SAMPLE_COMPLAINT } from '@/content/content';
+import { citizenCopy } from '@/content/content';
 import { DEMO_REPORTER_ID } from '@/services/mockData';
 import { Panel, Field, EmptyState, Spinner } from '@/components/common/Panel';
 import { MediaUploader } from '@/components/common/Media';
-import { SeverityBadge, StatusBadge, DemoTag } from '@/components/common/Badges';
+import { SeverityBadge, StatusBadge } from '@/components/common/Badges';
+import { StageProgress } from '@/components/timeline/Timeline';
 import { LocationPicker } from '@/components/maps/LocationPicker';
 import { useIncidentParam } from '@/components/incidents/IncidentDrawer';
 import { useLenis, useReveal } from '@/hooks/motion';
-import { INCIDENT_STATUSES } from '@/types';
 import { fmtDateTime, isValidCoord } from '@/utils';
 import { cn } from '@/lib/utils';
 
-const PROGRESS = INCIDENT_STATUSES.filter((s) => s !== 'Reopened' && s !== 'Action Submitted');
 
 export default function CitizenDashboard() {
   const scope = useRef<HTMLDivElement>(null);
@@ -79,13 +78,6 @@ export default function CitizenDashboard() {
     }
   };
 
-  const fillSample = () => {
-    setText(language === 'hi' ? SAMPLE_COMPLAINT.hi : SAMPLE_COMPLAINT.en);
-    setAddress(SAMPLE_COMPLAINT.address);
-    setLat(SAMPLE_COMPLAINT.lat);
-    setLng(SAMPLE_COMPLAINT.lng);
-    setErrors({});
-  };
 
   return (
     <div ref={scope} className="grid gap-5 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
@@ -139,11 +131,6 @@ export default function CitizenDashboard() {
 
         <Panel
           title={<span lang={citizenLang}>{t.title}</span>}
-          actions={
-            <button type="button" className="btn btn-ghost !min-h-8 !text-xs" onClick={fillSample}>
-              <Wand2 size={14} aria-hidden /> <span lang={citizenLang}>{t.fillSample}</span>
-            </button>
-          }
         >
           <form onSubmit={onSubmit} noValidate className="space-y-4" lang={citizenLang}>
             <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
@@ -223,7 +210,6 @@ export default function CitizenDashboard() {
           ) : (
             <ul className="divide-y divide-[var(--line)]">
               {mine.map((i) => {
-                const step = Math.max(0, PROGRESS.indexOf(i.status === 'Reopened' ? 'Allocated' : i.status === 'Action Submitted' ? 'Verification Pending' : i.status));
                 return (
                   <li key={i.id}>
                     <button className="w-full px-4 py-3 text-left transition-colors hover:bg-ink-800/60" onClick={() => open(i.id)}>
@@ -231,14 +217,11 @@ export default function CitizenDashboard() {
                         <span className="num text-sm font-semibold text-ink-100">{i.id}</span>
                         <StatusBadge status={i.status} />
                         {i.analysis && <SeverityBadge severity={i.analysis.severity} />}
-                        {i.isDemo && <DemoTag />}
                         <ChevronRight size={15} className="ml-auto text-ink-500" aria-hidden />
                       </div>
                       <p className="mt-1 line-clamp-1 text-xs text-ink-300" lang={i.complaint.language}>{i.complaint.originalText}</p>
-                      <div className="mt-2 flex gap-1" aria-label={`Progress: step ${step + 1} of ${PROGRESS.length}`}>
-                        {PROGRESS.map((s, idx) => (
-                          <span key={s} title={s} className={cn('h-1 flex-1 rounded-full', idx <= step ? (i.status === 'Verified Closed' ? 'bg-sev-low' : 'bg-accent') : 'bg-ink-700')} />
-                        ))}
+                      <div className="mt-2.5">
+                        <StageProgress incident={i} />
                       </div>
                       <p className="mt-1.5 text-[11px] text-ink-400">
                         {fmtDateTime(i.complaint.timestamp)}

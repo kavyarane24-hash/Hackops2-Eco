@@ -18,7 +18,7 @@ import type {
 } from '@/types';
 import { analyseBatch } from '@/services/analysis';
 import { analyzeComplaint, uploadImage } from '@/services/api';
-import { OFFICERS, DEMO_REPORTER_ID, createSeedIncidents } from '@/services/mockData';
+import { OFFICERS, DEMO_REPORTER_ID } from '@/services/mockData';
 import { complaintId, uid } from '@/utils';
 import { toast } from './uiStore';
 
@@ -107,7 +107,7 @@ export const useIncidentStore = create<IncidentState>()(
         const inc = get().incidents.find((i) => i.id === id);
         if (!inc) return;
         try {
-          const analysis = await analyzeComplaint(inc.complaint);
+          const analysis = await analyzeComplaint(inc.complaint, get().imports.flatMap((b) => b.readings));
           patch(
             id,
             (i) => ({
@@ -128,7 +128,7 @@ export const useIncidentStore = create<IncidentState>()(
       };
 
       return {
-        incidents: createSeedIncidents(),
+        incidents: [],
         notifications: [],
         imports: [],
         potentials: [],
@@ -165,7 +165,7 @@ export const useIncidentStore = create<IncidentState>()(
               evidenceFiles: batch?.evidence ?? [],
               reporterName: 'Data import (admin)',
             },
-            analysis: { ...pot.analysis, environmentalContext: { ...pot.analysis.environmentalContext } },
+            analysis: { ...pot.analysis },
             analysisState: 'done',
             status: 'Assessed',
             fieldUpdates: [],
@@ -353,12 +353,23 @@ export const useIncidentStore = create<IncidentState>()(
         markNotificationsRead: (role) =>
           set((s) => ({ notifications: s.notifications.map((n) => (n.role === role ? { ...n, read: true } : n)) })),
 
-        resetDemo: () => set({ incidents: createSeedIncidents(), notifications: [], imports: [], potentials: [], reports: [] }),
+        resetDemo: () => set({ incidents: [], notifications: [], imports: [], potentials: [], reports: [] }),
       };
     },
     {
       name: 'enviro-intel-store-v1',
       storage: createJSONStorage(() => safeStorage),
+      // v2: seeded demo incidents removed. Drop them from saved state, keep real records.
+      version: 2,
+      migrate: (persisted) => {
+        const st = persisted as { incidents?: Incident[]; notifications?: { incidentId: string }[] };
+        const demoIds = new Set((st.incidents ?? []).filter((i) => i.isDemo).map((i) => i.id));
+        return {
+          ...st,
+          incidents: (st.incidents ?? []).filter((i) => !i.isDemo),
+          notifications: (st.notifications ?? []).filter((n) => !demoIds.has(n.incidentId)),
+        } as never;
+      },
       partialize: (s) => ({
         // blob: URLs (videos) don't survive reloads; mark them so the UI can explain.
         incidents: s.incidents,

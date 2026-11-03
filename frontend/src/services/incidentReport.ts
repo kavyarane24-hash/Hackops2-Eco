@@ -100,8 +100,8 @@ export function buildReportModel(r: IncidentReport): ReportSection[] {
   });
 
   const env: Block[] = [];
-  if (a) {
-    const ctx = a.environmentalContext;
+  const ctx = a?.environmentalContext;
+  if (ctx) {
     env.push({
       kind: 'kv',
       rows: [

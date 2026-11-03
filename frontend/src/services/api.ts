@@ -8,7 +8,7 @@
 //   POST /api/intelligence/analyze-complaint 501 until the backend implements it
 // Not yet on the backend (frontend uses its local store): complaints CRUD,
 // allocation, field updates, verification, reports.
-import type { AIAnalysisOutput, ComplaintInput } from '@/types';
+import type { AIAnalysisOutput, ComplaintInput, EnvironmentalReading } from '@/types';
 import { mockAnalyze } from './ai';
 
 export const USE_REAL_API = import.meta.env.VITE_USE_REAL_API === 'true';
@@ -73,7 +73,7 @@ export async function uploadImage(dataUrl: string, name: string): Promise<string
  * mode; any failure falls back to the in-browser rule engine so the demo keeps
  * working. The result always says which engine produced it.
  */
-export async function analyzeComplaint(c: ComplaintInput): Promise<AIAnalysisOutput> {
+export async function analyzeComplaint(c: ComplaintInput, readings: EnvironmentalReading[] = []): Promise<AIAnalysisOutput> {
   if (USE_REAL_API) {
     try {
       const res = await request<{ analysis: AIAnalysisOutput }>('/api/intelligence/analyze-complaint', {
@@ -91,11 +91,11 @@ export async function analyzeComplaint(c: ComplaintInput): Promise<AIAnalysisOut
       if (res.analysis) return { ...res.analysis, generatedBy: 'backend-ai' };
     } catch (e) {
       const reason = e instanceof ApiError ? e.message : 'unknown error';
-      const fallback = mockAnalyze(c);
+      const fallback = mockAnalyze(c, readings);
       return { ...fallback, engineNote: `Backend analysis unavailable (${reason}); used the in-browser rule engine.` };
     }
   }
   // Small delay so the "analysing" state is visible in the demo.
   await new Promise((r) => setTimeout(r, 900));
-  return mockAnalyze(c);
+  return mockAnalyze(c, readings);
 }

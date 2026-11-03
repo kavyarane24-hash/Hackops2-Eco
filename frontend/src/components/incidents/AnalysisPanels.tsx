@@ -85,15 +85,20 @@ export function AIAnalysisPanel({ analysis }: { analysis: AIAnalysisOutput }) {
 
       <section>
         <h3 className="eyebrow mb-2">Environmental context</h3>
-        <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <KeyValue k="AQI" v={<span style={{ color: aqiCategory(ctx.aqi).color }}>{ctx.aqi} · {ctx.aqiCategory}</span>} mono />
-          <KeyValue k="PM2.5 (24-h)" v={`${ctx.pm25_24h} µg/m³`} mono />
-          <KeyValue k="PM10 (24-h)" v={`${ctx.pm10_24h} µg/m³`} mono />
-          <KeyValue k="Wind" v={`${ctx.windDirection} · ${ctx.windSpeedKmh} km/h`} mono />
-        </dl>
-        <p className="mt-2 flex items-center gap-2 text-[11px] text-ink-400">
-          {ctx.stationName} {ctx.simulated && <DemoTag label="Simulated" />}
-        </p>
+        {ctx ? (
+          <>
+            <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <KeyValue k="AQI" v={<span style={{ color: aqiCategory(ctx.aqi).color }}>{ctx.aqi} · {ctx.aqiCategory}</span>} mono />
+              <KeyValue k="PM2.5 (day mean)" v={ctx.pm25_24h ? `${ctx.pm25_24h} µg/m³` : '—'} mono />
+              <KeyValue k="PM10 (day mean)" v={ctx.pm10_24h ? `${ctx.pm10_24h} µg/m³` : '—'} mono />
+            </dl>
+            <p className="mt-2 flex items-center gap-2 text-[11px] text-ink-400">
+              {ctx.stationName} · recorded {new Date(ctx.readingTime).toLocaleString('en-IN')} {ctx.simulated && <DemoTag label="Simulated" />}
+            </p>
+          </>
+        ) : (
+          <p className="muted">No imported monitoring data near this location. Import station data to add context.</p>
+        )}
       </section>
 
       <section>

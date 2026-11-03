@@ -66,13 +66,6 @@ const citizen = {
 export type CitizenCopy = (typeof citizen)['en'];
 export const citizenCopy = (lang: Language): CitizenCopy => citizen[lang];
 
-export const SAMPLE_COMPLAINT = {
-  en: 'Thick black smoke from garbage and plastic burning behind the community park every night since Monday. Children are coughing and it is hard to breathe.',
-  hi: 'सोमवार से हर रात सामुदायिक पार्क के पीछे कचरा और प्लास्टिक जलाने से घना काला धुआं उठ रहा है। बच्चे खांस रहे हैं और सांस लेना मुश्किल है।',
-  address: 'Behind community park, Mayur Vihar Phase 1 (demo)',
-  lat: 28.6075,
-  lng: 77.2955,
-};
 
 export const ROLE_LABEL = {
   citizen: 'Citizen',

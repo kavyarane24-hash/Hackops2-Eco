@@ -7,7 +7,8 @@ import { Panel, EmptyState, Field } from '@/components/common/Panel';
 import { MediaUploader, MediaGrid } from '@/components/common/Media';
 import { SeverityBadge, StatusBadge, UrgencyBadge } from '@/components/common/Badges';
 import { AIAnalysisPanel, AnalysisState, EvidenceList } from '@/components/incidents/AnalysisPanels';
-import { FieldUpdateList, Timeline } from '@/components/incidents/Workflow';
+import { FieldUpdateList } from '@/components/incidents/Workflow';
+import { IncidentDayTimeline } from '@/components/timeline/Timeline';
 import { OfficerCard } from '@/components/effects/OfficerCard';
 import { OPEN_STATUSES, SEVERITY_RANK } from '@/config/constants';
 import { useReveal } from '@/hooks/motion';
@@ -322,7 +323,7 @@ export default function FieldOfficerDashboard() {
             )}
             {view === 'history' && (
               <Panel title="Case history">
-                <Timeline history={current.history} />
+                <IncidentDayTimeline incident={current} />
               </Panel>
             )}
           </div>

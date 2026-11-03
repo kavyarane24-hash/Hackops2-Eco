@@ -7,7 +7,9 @@ One React app with four role dashboards that share a single incident store.
 |---|---|---|
 | `/citizen` | Citizen | Report a complaint (English/Hindi, map pin, photo/video), track “My complaints” |
 | `/admin` | Admin › Operations | KPI strip and the incident table (the main workspace), verification and allocation queues |
-| `/admin/analytics` | Admin › Analytics | AQI/PM trends, priority-incident carousel, outlook, NAAQS screening, officer workload |
+| `/admin/actions` | Admin › Action & Management | Moving action board (Carousel), overdue/due-soon/awaiting-verification counts, allocate, review, reopen, officer workload |
+| `/admin/timeline` | Admin › Timeline | Recorded-day activity timeline and monitoring readings by day (real records only) |
+| `/admin/analytics` | Admin › Analytics | Trends from imported readings, short outlook, readings by day |
 | `/admin/import` | Admin › Data Import & Analysis | Upload, extract, review/map, confirm, potential-incident review and approval |
 | `/admin/reports` | Admin › Incident Reports | Generate, preview and version reports; download PDF / JSON / records CSV; print |
 | `/stakeholder` | Stakeholder | Leaflet + OpenStreetMap hotspot map, filters, department- and area-wise reporting |
@@ -50,7 +52,7 @@ npm run dev        # http://localhost:3000
    - Readings are grouped by station into potential incidents.
 6. **Review and approve**: each finding shows its analysis, evidence with references, compliance, missing information and next steps. Approving creates a shared incident with status Assessed. You can add or correct coordinates and optionally assign straight away.
 
-Sample files: `public/samples/demo-hourly-air-quality.csv` and `demo-daily-averages.json`. These are **simulated**, and contain deliberate data-quality problems to exercise validation.
+No sample or seeded data ships with the app: it starts empty and shows only records entered or imported by users.
 
 ## Incident reports
 

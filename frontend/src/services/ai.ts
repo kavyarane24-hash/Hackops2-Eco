@@ -5,6 +5,7 @@
 import type {
   AIAnalysisOutput,
   ComplaintInput,
+  EnvironmentalReading,
   ComplianceComparison,
   EvidenceItem,
   IncidentCategory,
@@ -14,8 +15,8 @@ import type {
 } from '@/types';
 import { CATEGORY_DEPARTMENT, aqiCategory } from '@/config/constants';
 import { compare } from './compliance';
-import { nearestStation, projectSeries, stationSeries, trendDirection } from './airQuality';
-import { clamp, hashString, seeded, uid } from '@/utils';
+import { dailySeriesFromReadings } from './airQuality';
+import { clamp, uid } from '@/utils';
 
 interface CategoryRule {
   category: IncidentCategory;
@@ -88,8 +89,9 @@ function classify(text: string) {
   return { rule: best?.rule ?? null, keywordHits: best?.hits ?? 0, severeHits };
 }
 
-function severityFrom(aqi: number, severeHits: number): Severity {
-  const score = aqi + severeHits * 45;
+function severityFrom(aqi: number | undefined, severeHits: number): Severity {
+  // Without monitoring data, severity rests on the complaint text alone.
+  const score = (aqi ?? 150) + severeHits * 45;
   if (score >= 380) return 'Critical';
   if (score >= 280) return 'High';
   if (score >= 170) return 'Medium';
@@ -98,140 +100,113 @@ function severityFrom(aqi: number, severeHits: number): Severity {
 
 const URGENCY: Record<Severity, Urgency> = { Critical: 'Immediate', High: 'High', Medium: 'Moderate', Low: 'Low' };
 
-export function buildCompliance(pm25: number, pm10: number): ComplianceComparison[] {
-  const limitations = ['Simulated single-station 24-h average (demo data), not validated CAAQMS data.'];
-  return (['PM2.5', 'PM10'] as const).map((pollutant) =>
-    compare({ pollutant, observed: pollutant === 'PM2.5' ? pm25 : pm10, unit: 'µg/m³', averagingPeriod: '24 hours', needsVerification: true, limitations }),
-  );
+function km(aLat: number, aLng: number, bLat: number, bLng: number) {
+  const R = 6371, dLat = ((bLat - aLat) * Math.PI) / 180, dLng = ((bLng - aLng) * Math.PI) / 180;
+  const x = Math.sin(dLat / 2) ** 2 + Math.cos((aLat * Math.PI) / 180) * Math.cos((bLat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(x));
 }
 
-/** Mock analysis. Deterministic for a given complaint so re-renders stay stable. */
-export function mockAnalyze(c: ComplaintInput): AIAnalysisOutput {
-  const rnd = seeded(hashString(c.id));
+const dayOf = (iso: string) => {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+/**
+ * Rule-based complaint analysis. Environmental context, compliance and sensor
+ * evidence come ONLY from imported readings within 10 km; with none, those
+ * sections stay empty rather than being invented.
+ */
+export function mockAnalyze(c: ComplaintInput, readings: EnvironmentalReading[] = []): AIAnalysisOutput {
   const { rule, keywordHits, severeHits } = classify(`${c.originalText} ${c.translatedText ?? ''}`);
-  const station = nearestStation(c.location.lat, c.location.lng);
-  const series = stationSeries(station.name, 30, station.intensity);
-  const today = series[series.length - 1];
   const now = new Date().toISOString();
+  const { lat, lng } = c.location;
 
-  const category: IncidentCategory = rule?.category ?? 'Other Air Pollution';
-  const severity = severityFrom(today.aqi, severeHits);
-  const hasMedia = c.evidenceFiles.length > 0;
-  const confidence = clamp(0.38 + keywordHits * 0.12 + (hasMedia ? 0.12 : 0) + rnd() * 0.08, 0.3, 0.92);
-
-  const ev: EvidenceItem[] = [
-    {
-      id: uid('ev'),
-      type: 'citizen_report',
-      title: 'Citizen complaint text',
-      description: c.originalText.slice(0, 220),
-      source: c.language === 'hi' ? 'Citizen portal (Hindi)' : 'Citizen portal',
-      timestamp: c.timestamp,
-      location: c.location,
-      reliability: 'Unverified',
-      simulated: false,
-    },
-    ...c.evidenceFiles.map<EvidenceItem>((m) => ({
-      id: uid('ev'),
-      type: 'citizen_media',
-      title: `Citizen ${m.kind}: ${m.name}`,
-      description: 'Uploaded by reporter. Not yet reviewed; image content is not automatically analysed in demo mode.',
-      source: 'Citizen upload',
-      url: m.url,
-      timestamp: m.uploadedAt,
-      location: c.location,
-      reliability: 'Unverified',
-      simulated: false,
-    })),
-    {
-      id: uid('ev'),
-      type: 'sensor',
-      title: `${station.name}: 24-h PM2.5 ${today.pm25} µg/m³, PM10 ${today.pm10} µg/m³`,
-      description: `Nearest monitoring station. AQI ${today.aqi} (${aqiCategory(today.aqi).name}).`,
-      source: station.name,
-      timestamp: now,
-      reliability: 'Medium',
-      simulated: true,
-    },
-    {
-      id: uid('ev'),
-      type: 'weather',
-      title: 'Low wind speed, north-westerly flow',
-      description: 'Calm conditions limit dispersion; NW flow can carry regional biomass smoke into the city.',
-      source: 'Demo weather feed',
-      timestamp: now,
-      reliability: 'Medium',
-      simulated: true,
-    },
-  ];
-  if (category === 'Biomass / Stubble Burning') {
-    ev.push({
-      id: uid('ev'),
-      type: 'satellite',
-      title: `${2 + Math.floor(rnd() * 5)} thermal anomalies within 10 km (last 24 h)`,
-      description: 'Simulated satellite fire detections. Verify against NASA FIRMS before relying on this.',
-      source: 'Demo satellite feed (FIRMS-style)',
-      timestamp: now,
-      reliability: 'Medium',
-      simulated: true,
-    });
+  let ctx: AIAnalysisOutput['environmentalContext'];
+  const compliance: ComplianceComparison[] = [];
+  let aqiSeries: number[] = [];
+  const sensorEvidence: EvidenceItem[] = [];
+  if (lat != null && lng != null) {
+    const near = readings.filter((r) => r.lat != null && r.lng != null && km(lat, lng, r.lat, r.lng) <= 10);
+    if (near.length) {
+      const nearest = near.reduce((best, r) => (km(lat, lng, r.lat!, r.lng!) < km(lat, lng, best.lat!, best.lng!) ? r : best));
+      const st = near.filter((r) => r.station === nearest.station);
+      const daily = dailySeriesFromReadings(st).filter((d) => d.aqi != null);
+      aqiSeries = daily.map((d) => d.aqi);
+      const last = daily[daily.length - 1];
+      if (last) {
+        const dayRs = st.filter((r) => dayOf(r.timestamp) === last.date);
+        const valid24 = dayRs.every((r) => r.averagingPeriod === '24 hours') || (dayRs.every((r) => r.averagingPeriod === '1 hour') && dayRs.length >= 16);
+        const files = [...new Set(st.map((r) => r.fileName))].join(', ');
+        const dist = Math.round(km(lat, lng, nearest.lat!, nearest.lng!) * 10) / 10;
+        ctx = {
+          stationName: nearest.station,
+          readingTime: dayRs[dayRs.length - 1]?.timestamp ?? now,
+          aqi: last.aqi,
+          aqiCategory: aqiCategory(last.aqi).name,
+          pm25_24h: last.pm25 ?? 0,
+          pm10_24h: last.pm10 ?? 0,
+          windDirection: 'n/a',
+          windSpeedKmh: 0,
+          temperatureC: 0,
+          humidityPct: 0,
+          simulated: false,
+        };
+        const lim = [`Imported data (${files}), not validated CAAQMS records.`, `Station ${dist} km from the complaint location; most recent recorded day ${last.date}.`];
+        for (const p of ['PM2.5', 'PM10'] as const) {
+          const v = p === 'PM2.5' ? last.pm25 : last.pm10;
+          if (v != null) compliance.push(compare({ pollutant: p, observed: v, unit: 'µg/m³', averagingPeriod: valid24 ? '24 hours' : 'unknown', needsVerification: true, limitations: lim }));
+        }
+        sensorEvidence.push({ id: uid('ev'), type: 'sensor', title: `${nearest.station}: AQI ${last.aqi} on ${last.date}`, description: `${dayRs.length} imported value(s) that day; ${dist} km away.`, source: files, timestamp: dayRs[0]?.timestamp ?? now, reliability: 'Unverified', simulated: false });
+      }
+    }
   }
 
-  const supportIds = ev.filter((e) => e.type !== 'weather').map((e) => e.id);
-  const sourceNames = rule?.sources ?? ['Unidentified local combustion source', 'Regional background pollution'];
-  const possibleSources: SourceHypothesis[] = sourceNames.map((s, i) => ({
+  const category: IncidentCategory = rule?.category ?? 'Other Air Pollution';
+  const severity = severityFrom(ctx?.aqi, severeHits);
+  const hasMedia = c.evidenceFiles.length > 0;
+  const confidence = clamp(0.35 + keywordHits * 0.12 + (hasMedia ? 0.1 : 0) + (ctx ? 0.08 : 0), 0.25, 0.9);
+
+  const ev: EvidenceItem[] = [
+    { id: uid('ev'), type: 'citizen_report', title: 'Citizen complaint text', description: c.originalText.slice(0, 220), source: c.language === 'hi' ? 'Citizen portal (Hindi)' : 'Citizen portal', timestamp: c.timestamp, location: c.location, reliability: 'Unverified', simulated: false },
+    ...c.evidenceFiles.map<EvidenceItem>((m) => ({ id: uid('ev'), type: 'citizen_media', title: `Citizen ${m.kind}: ${m.name}`, description: 'Uploaded by reporter. Not reviewed; image content is not analysed automatically.', source: 'Citizen upload', url: m.url, timestamp: m.uploadedAt, location: c.location, reliability: 'Unverified', simulated: false })),
+    ...sensorEvidence,
+  ];
+  const ids = ev.map((e) => e.id);
+  const possibleSources: SourceHypothesis[] = (rule?.sources ?? ['Unidentified local combustion source']).map((s, i) => ({
     id: uid('src'),
     source: s,
-    confidence: Math.round(clamp(confidence - i * 0.17 - rnd() * 0.05, 0.08, 0.9) * 100) / 100,
-    supportingEvidenceIds: i === 0 ? supportIds : supportIds.slice(0, 1),
-    contraryEvidence:
-      i === 0
-        ? hasMedia
-          ? []
-          : ['No photo or video evidence attached to the complaint.']
-        : ['Fewer matching keywords in the complaint.'],
+    confidence: Math.round(clamp(confidence - i * 0.17, 0.08, 0.9) * 100) / 100,
+    supportingEvidenceIds: i === 0 ? ids : ids.slice(0, 1),
+    contraryEvidence: i === 0 ? (hasMedia ? [] : ['No photo or video evidence attached.']) : ['Fewer matching keywords in the complaint.'],
     verificationRequired: ['On-site inspection by field officer', i === 0 ? 'Photographic evidence of the source' : 'Rule out primary hypothesis first'],
   }));
 
   const contradictory: string[] = [];
-  if (today.aqi < 150) contradictory.push('Nearest station AQI is not elevated; the event may be very local or short-lived.');
+  if (!ctx) contradictory.push('No imported monitoring data within 10 km; severity is based on the complaint text only.');
+  else if (ctx.aqi < 150) contradictory.push('Nearest imported station does not show elevated AQI.');
   if (!hasMedia) contradictory.push('No media evidence submitted.');
   if (!rule) contradictory.push('Complaint text does not clearly indicate a source type.');
 
-  const projection = projectSeries(series, 3);
+  const s7 = aqiSeries.slice(-7);
+  const slopeV = s7.length >= 3 ? (s7[s7.length - 1] - s7[0]) / (s7.length - 1) : 0;
   return {
     category,
     severity,
     urgency: URGENCY[severity],
     confidence: Math.round(confidence * 100) / 100,
-    summary: `Complaint likely relates to ${category.toLowerCase()}. Nearest station shows AQI ${today.aqi} (${aqiCategory(today.aqi).name}). Suggested routing: ${CATEGORY_DEPARTMENT[category].replace(/\.$/, '')}.`,
+    summary: `Complaint likely relates to ${category.toLowerCase()}.${ctx ? ` Nearest imported station (${ctx.stationName}) shows AQI ${ctx.aqi} (${ctx.aqiCategory}).` : ' No monitoring data is available nearby.'} Suggested routing: ${CATEGORY_DEPARTMENT[category].replace(/\.$/, '')}.`,
     possibleSources,
     supportingEvidence: ev,
     contradictoryEvidence: contradictory,
     trendEstimate: {
-      direction: trendDirection(series),
-      next72hAqi: projection.map((p) => p.aqi),
-      method: 'Linear trend over the last 7 daily averages',
-      disclaimer: 'Estimate only: naive trend line, not a forecast model. Weather changes can reverse it.',
+      direction: slopeV > 4 ? 'rising' : slopeV < -4 ? 'falling' : 'stable',
+      next72hAqi: s7.length >= 3 ? [1, 2, 3].map((k) => Math.round(clamp(s7[s7.length - 1] + slopeV * k, 0, 500))) : [],
+      method: s7.length >= 3 ? 'Linear trend over recorded daily values at the nearest imported station' : 'Not enough recorded days for a trend',
+      disclaimer: 'Estimate only: naive trend line, not a forecast model.',
     },
-    recommendations: rule?.recommendations ?? [
-      'Contact the reporter for more detail on the smoke source.',
-      'Schedule an inspection to identify the source.',
-    ],
-    compliance: buildCompliance(today.pm25, today.pm10),
-    environmentalContext: {
-      stationName: station.name,
-      readingTime: now,
-      aqi: today.aqi,
-      aqiCategory: aqiCategory(today.aqi).name,
-      pm25_24h: today.pm25,
-      pm10_24h: today.pm10,
-      windDirection: 'NW',
-      windSpeedKmh: Math.round(3 + rnd() * 6),
-      temperatureC: Math.round(18 + rnd() * 8),
-      humidityPct: Math.round(55 + rnd() * 25),
-      simulated: true,
-    },
+    recommendations: rule?.recommendations ?? ['Contact the reporter for more detail on the smoke source.', 'Schedule an inspection to identify the source.'],
+    compliance,
+    environmentalContext: ctx,
     generatedBy: 'mock-rules',
     generatedAt: now,
     engineNote: 'Generated by the in-browser rule engine (backend AI endpoint not yet available).',

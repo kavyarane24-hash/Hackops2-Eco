@@ -5,12 +5,13 @@ import { useIncidentStore } from '@/context/IncidentStore';
 import { Drawer } from '@/components/common/Overlay';
 
 const STEPS = [
-  { path: '/admin/import', title: 'Import a dataset', body: 'Download the sample CSV, drop it on the upload zone, review the field mapping and validation, then Confirm import.' },
+  { path: '/admin/import', title: 'Import a dataset', body: 'Drop a monitoring CSV/Excel/JSON file on the upload zone, review the field mapping and validation, then Confirm import.' },
   { path: '/admin/import', title: 'Review a potential incident', body: 'Open the top finding: preliminary analysis, evidence with row references, NAAQS comparison. Approve to create an incident.' },
-  { path: '/admin', title: 'Allocate', body: 'Open the new incident from the table → Allocate & verify → choose department, officer, deadline.' },
+  { path: '/admin/actions', title: 'Allocate and track', body: 'Action & Management → select the card or row → choose department, officer and deadline; watch progress and overdue items.' },
   { path: '/stakeholder', title: 'See it on the map', body: 'The incident appears at its coordinates with severity colour. Click the marker for details.' },
   { path: '/field', title: 'Field officer acts', body: 'Select the officer, open the case, add inspection notes, after-action evidence, submit for verification.' },
-  { path: '/admin', title: 'Verify', body: 'Awaiting verification → review the submission → Verify & close (or reject).' },
+  { path: '/admin/actions', title: 'Verify', body: 'Awaiting verification → Review submission → Verify & close (or reject / reopen).' },
+  { path: '/admin/timeline', title: 'Check the timeline', body: 'Every recorded day of complaints, imports, assignments, inspections and verifications.' },
   { path: '/admin/reports', title: 'Generate the report', body: 'Pick the incident → Generate report → preview, download PDF / JSON / records CSV.' },
   { path: '/citizen', title: 'Citizen complaint path', body: 'Submit a complaint (English/Hindi) with a pin and photo; it joins the same incident list.' },
 ];
