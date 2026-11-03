@@ -1,0 +1,30 @@
+{
+  "name": "hackops2-eco-backend",
+  "version": "1.0.0",
+  "description": "Environmental Intelligence & Compliance Management System – Backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "environment",
+    "pollution",
+    "intelligence",
+    "hackops"
+  ],
+  "author": "HackOps 2.0 Team",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "morgan": "^1.10.0",
+    "multer": "^2.5.0",
+    "uuid": "^11.1.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4",
+    "supertest": "^7.3.1"
+  }
+}
