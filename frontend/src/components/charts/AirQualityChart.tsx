@@ -20,7 +20,7 @@ export type Metric = 'aqi' | 'pm25' | 'pm10';
 export const RANGES = [7, 14, 30] as const;
 
 const META: Record<Metric, { label: string; unit: string; color: string; period: string }> = {
-  aqi: { label: 'AQI', unit: 'index', color: '#3ad6e0', period: 'Daily AQI (24-h basis)' },
+  aqi: { label: 'AQI', unit: 'index', color: '#087f8c', period: 'Daily AQI (24-h basis)' },
   pm25: { label: 'PM2.5', unit: 'µg/m³', color: '#f5b83d', period: '24-h average' },
   pm10: { label: 'PM10', unit: 'µg/m³', color: '#c0784a', period: '24-h average' },
 };
@@ -85,7 +85,7 @@ export function AirQualityChart({ series, projection = [], comparison, stationNa
         <div className="flex items-center gap-2">
           {comparison && (
             <label className="flex items-center gap-1.5 text-xs text-ink-300">
-              <input type="checkbox" checked={showCompare} onChange={(e) => setShowCompare(e.target.checked)} className="accent-[#3ad6e0]" />
+              <input type="checkbox" checked={showCompare} onChange={(e) => setShowCompare(e.target.checked)} className="accent-[#087f8c]" />
               Compare {comparison.name}
             </label>
           )}
@@ -124,7 +124,7 @@ export function AirQualityChart({ series, projection = [], comparison, stationNa
                 <stop offset="100%" stopColor={m.color} stopOpacity={0.02} />
               </linearGradient>
             </defs>
-            <CartesianGrid stroke="#9aa7b81a" vertical={false} />
+            <CartesianGrid stroke="#24323814" vertical={false} />
             {metric === 'aqi' &&
               AQI_BANDS.filter((b) => b.min <= maxY + 20).map((b) => (
                 <ReferenceArea key={b.name} y1={b.min} y2={Math.min(b.max, Math.ceil(maxY / 50) * 50 + 50)} fill={b.color} fillOpacity={0.05} stroke="none" ifOverflow="hidden" />
@@ -136,24 +136,24 @@ export function AirQualityChart({ series, projection = [], comparison, stationNa
                   y={limit}
                   stroke="#ef4444"
                   strokeDasharray="5 4"
-                  label={{ value: `NAAQS 24-h limit ${limit} µg/m³`, position: 'insideTopLeft', fill: '#fca5a5', fontSize: 11 }}
+                  label={{ value: `NAAQS 24-h limit ${limit} µg/m³`, position: 'insideTopLeft', fill: '#b42318', fontSize: 11 }}
                 />
               </>
             )}
-            <XAxis dataKey="label" tick={{ fill: '#9aa7b8', fontSize: 11 }} tickLine={false} axisLine={{ stroke: '#9aa7b833' }} minTickGap={18} />
+            <XAxis dataKey="label" tick={{ fill: '#68777b', fontSize: 11 }} tickLine={false} axisLine={{ stroke: '#68777b33' }} minTickGap={18} />
             <YAxis
-              tick={{ fill: '#9aa7b8', fontSize: 11 }}
+              tick={{ fill: '#68777b', fontSize: 11 }}
               tickLine={false}
               axisLine={false}
               width={44}
               label={{ value: m.unit, angle: -90, position: 'insideLeft', fill: '#6b7a8f', fontSize: 11, dx: 10 }}
             />
             <Tooltip
-              contentStyle={{ background: '#10161f', border: '1px solid #9aa7b844', borderRadius: 10, fontSize: 12 }}
+              contentStyle={{ background: '#ffffff', border: '1px solid #68777b44', borderRadius: 10, fontSize: 12 }}
               labelStyle={{ color: '#e6ebf1' }}
               formatter={(v, name) => [`${v} ${m.unit}`, String(name)]}
             />
-            <Legend wrapperStyle={{ fontSize: 12, color: '#9aa7b8' }} />
+            <Legend wrapperStyle={{ fontSize: 12, color: '#68777b' }} />
             {showCompare && comparison && (
               <Area type="monotone" dataKey="compare" name={comparison.name} stroke="#6ea0b1" strokeWidth={1.5} strokeDasharray="3 3" fill="none" dot={false} />
             )}

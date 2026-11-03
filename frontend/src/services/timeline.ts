@@ -5,13 +5,13 @@ import type { EnvironmentalReading, ImportBatch, Incident, IncidentStatus, Measu
 export type EventType = 'complaint' | 'import' | 'assessed' | 'assigned' | 'inspection' | 'verification' | 'resolved';
 
 export const EVENT_META: Record<EventType, { label: string; color: string }> = {
-  complaint: { label: 'Complaint submitted', color: '#3f86c9' },
-  import: { label: 'Data imported', color: '#6ea0b1' },
-  assessed: { label: 'Incident assessed', color: '#a3b0b8' },
-  assigned: { label: 'Action assigned', color: '#4cc3a5' },
-  inspection: { label: 'Inspection recorded', color: '#f5b83d' },
-  verification: { label: 'Verification', color: '#c084fc' },
-  resolved: { label: 'Incident resolved', color: '#22c55e' },
+  complaint: { label: 'Complaint submitted', color: '#2563a8' },
+  import: { label: 'Data imported', color: '#2f6f86' },
+  assessed: { label: 'Incident assessed', color: '#5b6b70' },
+  assigned: { label: 'Action assigned', color: '#087f8c' },
+  inspection: { label: 'Inspection recorded', color: '#b07800' },
+  verification: { label: 'Verification', color: '#7456a8' },
+  resolved: { label: 'Incident resolved', color: '#1f8a5b' },
 };
 
 export interface TimelineEvent {

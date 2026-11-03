@@ -181,27 +181,64 @@ export function IncidentDayTimeline({ incident }: { incident: Incident }) {
   );
 }
 
-const STAGES = ['Submitted', 'Assessed', 'Action in progress', 'Resolved'] as const;
+const STAGES = ['Report Submitted', 'Assessment', 'Investigation', 'Resolution'] as const;
 
-/** Four-stage progress with the actual dates each stage was reached. */
+/**
+ * Four-step progress derived from the incident status, with the date each
+ * step was reached. Completed steps are teal; the active step carries a
+ * restrained purple ring. Rejected or reopened cases fall back to
+ * Investigation and are never shown as resolved.
+ */
 export function StageProgress({ incident, compact }: { incident: Incident; compact?: boolean }) {
   const firstAt = (pred: (s: string) => boolean) => incident.history.find((h) => pred(h.status))?.timestamp;
+  const lastAt = (pred: (s: string) => boolean) => [...incident.history].reverse().find((h) => pred(h.status))?.timestamp;
+  const closed = incident.status === 'Verified Closed';
+  const investigating = ['Allocated', 'Under Investigation', 'Action Submitted', 'Verification Pending', 'Reopened'].includes(incident.status);
   const dates = [
     incident.complaint.timestamp,
     firstAt((s) => s === 'Assessed'),
-    firstAt((s) => ['Allocated', 'Under Investigation', 'Action Submitted', 'Verification Pending'].includes(s)),
-    incident.status === 'Verified Closed' ? incident.closedAt ?? firstAt((s) => s === 'Verified Closed') : undefined,
+    firstAt((s) => ['Allocated', 'Under Investigation'].includes(s)),
+    closed ? incident.closedAt ?? lastAt((s) => s === 'Verified Closed') : undefined,
   ];
-  const reached = incident.status === 'Verified Closed' ? 3 : dates[2] ? 2 : dates[1] ? 1 : 0;
+  // Index of the step currently in progress (all earlier steps are complete).
+  const active = closed ? 4 : investigating ? 2 : incident.status === 'Assessed' ? 2 : 1;
+  const label = closed ? 'Resolved' : `${STAGES[Math.min(active, 3)]} in progress`;
+
   return (
-    <ol className="grid grid-cols-4 gap-1.5" aria-label={`Progress: ${STAGES[reached]}`}>
-      {STAGES.map((s, i) => (
-        <li key={s}>
-          <span className={cn('block h-1.5 rounded-full', i <= reached ? (reached === 3 ? 'bg-sev-low' : 'bg-accent') : 'bg-ink-700')} />
-          <span className={cn('mt-1 block text-[11.5px] [font-family:var(--font-nav)]', i <= reached ? 'text-ink-100' : 'text-ink-500')}>{s}</span>
-          {!compact && <span className="muted block !text-[11px]">{dates[i] && i <= reached ? new Date(dates[i]!).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '—'}</span>}
-        </li>
-      ))}
+    <ol className={cn('flex gap-0', compact ? 'flex-row' : 'flex-col sm:flex-row')} aria-label={`Progress: ${label}`}>
+      {STAGES.map((s, i) => {
+        const done = i < active;
+        const current = i === active;
+        return (
+          <li key={s} className={cn('relative flex flex-1', compact ? 'flex-col items-center text-center' : 'items-start gap-3 pb-4 sm:flex-col sm:items-center sm:gap-0 sm:pb-0 sm:text-center')}>
+            {/* connector to the next step */}
+            {i < STAGES.length - 1 && (
+              <span
+                aria-hidden
+                className={cn(
+                  'absolute',
+                  compact ? 'left-1/2 top-[13px] h-[3px] w-full' : 'left-[14px] top-8 h-[calc(100%-2rem)] w-[3px] sm:left-1/2 sm:top-[14px] sm:h-[3px] sm:w-full',
+                )}
+                style={{ background: i < active - 1 ? 'var(--color-accent)' : i === active - 1 ? 'linear-gradient(90deg, var(--color-accent), var(--color-purple))' : 'var(--color-ink-700)' }}
+              />
+            )}
+            <span
+              className={cn(
+                'relative z-[1] flex shrink-0 items-center justify-center rounded-full text-[13px] font-bold transition-colors duration-300 [font-family:var(--font-nav)]',
+                compact ? 'h-7 w-7' : 'h-[30px] w-[30px]',
+                done ? 'bg-accent text-white' : current ? 'bg-white text-purple ring-[3px] ring-purple/60' : 'bg-ink-800 text-ink-400 ring-1 ring-ink-600',
+              )}
+              aria-current={current ? 'step' : undefined}
+            >
+              {i + 1}
+            </span>
+            <span className={cn(compact ? 'mt-1' : 'sm:mt-1.5')}>
+              <span className={cn('block text-[12px] leading-tight [font-family:var(--font-nav)]', done ? 'font-bold text-ink-100' : current ? 'font-bold text-purple' : 'text-ink-400')}>{s}</span>
+              {!compact && <span className="muted block !text-[11px]">{done && dates[i] ? new Date(dates[i]!).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : current ? 'In progress' : '—'}</span>}
+            </span>
+          </li>
+        );
+      })}
     </ol>
   );
 }

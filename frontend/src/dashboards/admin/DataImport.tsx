@@ -18,7 +18,7 @@ import { fmtBytes, fmtDateTime, isValidCoord } from '@/utils';
 import { cn } from '@/lib/utils';
 
 const KIND_ICON = { csv: FileSpreadsheet, excel: FileSpreadsheet, json: FileJson, pdf: FileText, docx: FileType, image: FileImage } as const;
-const STATUS_TONE: Record<ImportFile['status'], string> = { Uploaded: '#a3b0b8', Processing: '#3f86c9', Processed: '#4ade80', Failed: '#f87171' };
+const STATUS_TONE: Record<ImportFile['status'], string> = { Uploaded: '#68777b', Processing: '#3f86c9', Processed: '#1f8a5b', Failed: '#c0362c' };
 
 export default function DataImport() {
   const { files, addFiles, process, remove, update, clear, buildBatch } = useImportSession();
@@ -84,7 +84,7 @@ export default function DataImport() {
                         <div className="h-full bg-azure transition-all" style={{ width: `${Math.max(5, f.progress)}%` }} />
                       </div>
                     )}
-                    {f.error && <p role="alert" className="mt-0.5 text-[12.5px] text-[#fca5a5]">{f.error}</p>}
+                    {f.error && <p role="alert" className="mt-0.5 text-[12.5px] text-[#b42318]">{f.error}</p>}
                   </div>
                   <span className="chip" style={{ color: STATUS_TONE[f.status], borderColor: `${STATUS_TONE[f.status]}55` }}>
                     {f.status === 'Processing' && <Spinner size={10} />}
@@ -205,7 +205,7 @@ function FileReview({ file, onChange }: { file: ImportFile; onChange: (patch: Pa
         <img src={file.previewUrl} alt={`Preview of ${file.name}`} className="max-h-72 w-full rounded-lg object-contain bg-ink-950" />
         <div className="space-y-3 text-[13.5px]">
           <label className="flex items-center gap-2">
-            <input type="checkbox" checked={file.include !== false} onChange={(e) => onChange({ include: e.target.checked })} className="accent-[#4cc3a5]" />
+            <input type="checkbox" checked={file.include !== false} onChange={(e) => onChange({ include: e.target.checked })} className="accent-[#087f8c]" />
             Attach this image as evidence to findings from this import
           </label>
           <p className="muted">OCR and image analysis are not available in this build, so no text or visual interpretation is extracted. An image alone does not prove a pollution violation.</p>
@@ -255,7 +255,7 @@ function TableReview({ file, onChange }: { file: ImportFile; onChange: (patch: P
         ))}
       </dl>
       {blocking.length > 0 && (
-        <p role="alert" className="flex items-start gap-2 rounded-md bg-sev-critical/10 px-3 py-2 text-[13px] text-[#fca5a5]">
+        <p role="alert" className="flex items-start gap-2 rounded-md bg-sev-critical/10 px-3 py-2 text-[13px] text-[#b42318]">
           <XCircle size={15} className="mt-0.5 shrink-0" aria-hidden /> {blocking.map((b) => b.message).join(' ')}
         </p>
       )}
@@ -296,7 +296,7 @@ function TableReview({ file, onChange }: { file: ImportFile; onChange: (patch: P
         {showIssues && (
           <ul className="mt-2 max-h-56 space-y-0.5 overflow-y-auto rounded-md bg-[var(--surface-sunken)] p-3 text-[12.5px]">
             {v.issues.slice(0, 200).map((i, k) => (
-              <li key={k} className={i.level === 'error' ? 'text-[#fca5a5]' : 'text-ink-300'}>
+              <li key={k} className={i.level === 'error' ? 'text-[#b42318]' : 'text-ink-300'}>
                 <span className="num text-ink-400">{i.ref}</span> · {i.message}
               </li>
             ))}
@@ -345,7 +345,7 @@ function DocumentReview({ file, onChange }: { file: ImportFile; onChange: (patch
   return (
     <div className="space-y-4">
       <label className="flex items-center gap-2 text-[13.5px]">
-        <input type="checkbox" checked={file.include !== false} onChange={(e) => onChange({ include: e.target.checked })} className="accent-[#4cc3a5]" />
+        <input type="checkbox" checked={file.include !== false} onChange={(e) => onChange({ include: e.target.checked })} className="accent-[#087f8c]" />
         Include findings from this document in the import
       </label>
       <p className="muted">Extracted by keyword and pattern matching, not language understanding. Every item keeps its page or section reference. Readings without a stated averaging period cannot be compared with NAAQS limits.</p>
@@ -385,13 +385,13 @@ function DailyChart({ daily }: { daily: DailyAggregate[] }) {
     <div className="h-56" role="img" aria-label="Daily PM2.5 and PM10 averages with NAAQS 24-hour limits">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={daily.map((d) => ({ day: d.day.slice(5), 'PM2.5': d.pm25, PM10: d.pm10 }))} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-          <CartesianGrid stroke="#a3b0b81a" vertical={false} />
-          <XAxis dataKey="day" tick={{ fill: '#a3b0b8', fontSize: 11 }} tickLine={false} />
-          <YAxis tick={{ fill: '#a3b0b8', fontSize: 11 }} tickLine={false} axisLine={false} width={40} label={{ value: 'µg/m³', angle: -90, position: 'insideLeft', fill: '#75858f', fontSize: 11, dx: 10 }} />
-          <Tooltip contentStyle={{ background: '#131b21', border: '1px solid #a3b0b844', borderRadius: 8, fontSize: 12 }} formatter={(v) => [`${v} µg/m³`]} />
+          <CartesianGrid stroke="#24323814" vertical={false} />
+          <XAxis dataKey="day" tick={{ fill: '#68777b', fontSize: 11 }} tickLine={false} />
+          <YAxis tick={{ fill: '#68777b', fontSize: 11 }} tickLine={false} axisLine={false} width={40} label={{ value: 'µg/m³', angle: -90, position: 'insideLeft', fill: '#75858f', fontSize: 11, dx: 10 }} />
+          <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #68777b44', borderRadius: 8, fontSize: 12 }} formatter={(v) => [`${v} µg/m³`]} />
           <Legend wrapperStyle={{ fontSize: 12 }} />
           <ReferenceLine y={60} stroke="#f5b83d" strokeDasharray="4 4" label={{ value: 'PM2.5 24-h limit 60', fill: '#f5b83d', fontSize: 10, position: 'insideTopLeft' }} />
-          <ReferenceLine y={100} stroke="#f87171" strokeDasharray="4 4" label={{ value: 'PM10 24-h limit 100', fill: '#f87171', fontSize: 10, position: 'insideTopRight' }} />
+          <ReferenceLine y={100} stroke="#c0362c" strokeDasharray="4 4" label={{ value: 'PM10 24-h limit 100', fill: '#c0362c', fontSize: 10, position: 'insideTopRight' }} />
           <Area type="monotone" dataKey="PM2.5" stroke="#3f86c9" fill="#3f86c933" strokeWidth={2} />
           <Area type="monotone" dataKey="PM10" stroke="#c0784a" fill="#c0784a22" strokeWidth={2} />
         </AreaChart>
@@ -455,7 +455,7 @@ function PotentialReview({ potential, onClose }: { potential: PotentialIncident 
         ))}
       </div>
       <div className="space-y-5 p-5">
-        <p className="rounded-md bg-sev-medium/10 px-3 py-2 text-[13px] text-[#fcd68a]">Preliminary assessment generated by in-browser rules from imported data. No AI model was used. Requires human verification.</p>
+        <p className="rounded-md bg-sev-medium/10 px-3 py-2 text-[13px] text-[#8a5a00]">Preliminary assessment generated by in-browser rules from imported data. No AI model was used. Requires human verification.</p>
 
         {tab === 'summary' && (
           <>
@@ -512,7 +512,7 @@ function PotentialReview({ potential, onClose }: { potential: PotentialIncident 
                 <Field label="Longitude" htmlFor="pot-lng"><input id="pot-lng" className="input num" value={lng} onChange={(e) => setLng(e.target.value)} placeholder="e.g. 77.2090" /></Field>
               </div>
               <label className="flex items-center gap-2 text-[13.5px]">
-                <input type="checkbox" checked={assignNow} onChange={(e) => setAssignNow(e.target.checked)} className="accent-[#4cc3a5]" />
+                <input type="checkbox" checked={assignNow} onChange={(e) => setAssignNow(e.target.checked)} className="accent-[#087f8c]" />
                 Also assign now (suggested: {OFFICERS.find((o) => o.id === p.suggestedOfficerId)?.name}, {p.suggestedDepartment})
               </label>
               {assignNow && (
@@ -522,7 +522,7 @@ function PotentialReview({ potential, onClose }: { potential: PotentialIncident 
                   <Field label="Deadline" htmlFor="pot-dl"><input id="pot-dl" type="date" className="input" value={deadline} onChange={(e) => setDeadline(e.target.value)} /></Field>
                 </div>
               )}
-              {error && <p role="alert" className="text-[13px] text-[#fca5a5]">{error}</p>}
+              {error && <p role="alert" className="text-[13px] text-[#b42318]">{error}</p>}
               <div className="flex flex-wrap gap-2">
                 <button className="btn btn-primary" onClick={approve}><CheckCircle2 size={15} aria-hidden /> Approve & create incident</button>
                 <button className="btn btn-ghost" onClick={() => { dismissPotential(p.id, 'Not an incident after review'); toast('Finding dismissed', 'info'); onClose(); }}>Dismiss finding</button>

@@ -13,7 +13,7 @@ interface Props {
 /** Officer / action-ownership summary, driven by live store data. */
 export function OfficerCard({ officer, assignment, openCases, progressLabel, compact }: Props) {
   const due = daysUntil(assignment?.deadline);
-  const statusColor = due == null ? '#a3b0b8' : due < 0 ? '#ef4444' : due <= 1 ? '#f5b83d' : '#22c55e';
+  const statusColor = due == null ? '#68777b' : due < 0 ? '#ef4444' : due <= 1 ? '#f5b83d' : '#22c55e';
   const status = assignment ? (due == null ? 'Assigned' : due < 0 ? `Overdue ${-due}d` : `Due in ${due}d`) : `${openCases} open case${openCases === 1 ? '' : 's'}`;
   const initials = officer.name.split(' ').map((p) => p[0]).slice(0, 2).join('');
 

@@ -16,13 +16,13 @@ const Carousel = lazy(() => import('@/components/effects/Carousel'));
 type ActionState = 'Overdue' | 'Due soon' | 'Awaiting verification' | 'In progress' | 'Assigned' | 'Unassigned' | 'Completed';
 
 const STATE_COLOR: Record<ActionState, string> = {
-  Overdue: '#f87171',
-  'Due soon': '#f5b83d',
-  'Awaiting verification': '#c084fc',
-  'In progress': '#3f86c9',
-  Assigned: '#4cc3a5',
-  Unassigned: '#a3b0b8',
-  Completed: '#4ade80',
+  Overdue: '#c0362c',
+  'Due soon': '#b07800',
+  'Awaiting verification': '#7456a8',
+  'In progress': '#2563a8',
+  Assigned: '#087f8c',
+  Unassigned: '#5b6b70',
+  Completed: '#1f8a5b',
 };
 const ORDER: ActionState[] = ['Overdue', 'Awaiting verification', 'Due soon', 'Unassigned', 'In progress', 'Assigned', 'Completed'];
 
@@ -88,7 +88,7 @@ export default function ActionManagement() {
                 baseWidth="100%"
                 aspectRatio={2.3}
                 items={cards.map(({ i, state, last }) => (
-                  <button key={i.id} onClick={() => open(i.id, 'manage')} className="flex h-full w-full flex-col justify-between rounded-[12px] bg-ink-800 p-4 text-left transition-transform duration-200 hover:-translate-y-0.5" style={{ boxShadow: `inset 3px 0 0 ${STATE_COLOR[state]}` }}>
+                  <button key={i.id} onClick={() => open(i.id, 'manage')} className="flex h-full w-full flex-col justify-between rounded-[12px] bg-white p-4 text-left ring-1 ring-[var(--line-strong)] transition-transform duration-200 hover:-translate-y-0.5" style={{ boxShadow: `inset 3px 0 0 ${STATE_COLOR[state]}` }}>
                     <div>
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-[12.5px] font-bold [font-family:var(--font-nav)]" style={{ color: STATE_COLOR[state] }}>{state}</span>
@@ -131,7 +131,7 @@ export default function ActionManagement() {
                         </td>
                         <td className="px-5 py-2.5 font-bold" style={{ color: STATE_COLOR[r.state] }}>{r.state}</td>
                         <td className="px-5 py-2.5">{r.i.assignment ? <>{r.i.assignment.officerName}<span className="muted block">{r.i.assignment.department}</span></> : <span className="muted">—</span>}</td>
-                        <td className={cn('num whitespace-nowrap px-5 py-2.5', r.state === 'Overdue' && 'text-[#fca5a5]')}>{r.i.assignment ? fmtDate(r.i.assignment.deadline) : '—'}</td>
+                        <td className={cn('num whitespace-nowrap px-5 py-2.5', r.state === 'Overdue' && 'text-[#b42318]')}>{r.i.assignment ? fmtDate(r.i.assignment.deadline) : '—'}</td>
                         <td className="px-5 py-2.5">{r.last ? <>{r.last.type === 'action_submission' ? 'Action submitted' : 'Inspection'}<span className="muted block">{fmtDateTime(r.last.timestamp)}</span></> : <span className="muted">None</span>}</td>
                         <td className="px-5 py-2.5 text-right"><button className={cn('btn !min-h-8', r.state === 'Awaiting verification' || r.state === 'Unassigned' ? 'btn-primary' : 'btn-ghost')} onClick={() => open(r.i.id, a.tab)}>{a.label}</button></td>
                       </tr>

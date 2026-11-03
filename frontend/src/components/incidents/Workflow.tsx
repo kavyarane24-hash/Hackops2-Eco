@@ -122,7 +122,7 @@ export function AllocationForm({ incident, onDone }: { incident: Incident; onDon
           <textarea id="alloc-notes" rows={2} className="input" value={instructions} onChange={(e) => setInstructions(e.target.value)} placeholder="Optional" />
         </Field>
       </div>
-      {error && <p role="alert" className="text-xs text-[#fca5a5] sm:col-span-2">{error}</p>}
+      {error && <p role="alert" className="text-xs text-[#b42318] sm:col-span-2">{error}</p>}
       <div className="sm:col-span-2">
         <button type="submit" className="btn btn-primary">
           <Send size={15} aria-hidden /> {incident.assignment ? 'Update assignment' : 'Assign incident'}

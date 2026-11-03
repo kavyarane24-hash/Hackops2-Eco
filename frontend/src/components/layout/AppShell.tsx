@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, Waves, HardHat, LayoutDashboard, Map, MousePointer2, PlayCircle, RotateCcw, Leaf, User, Wifi, WifiOff, FlaskConical } from 'lucide-react';
+import { Bell, HardHat, LayoutDashboard, Map, Menu, PlayCircle, RotateCcw, Leaf, User, Wifi, WifiOff, FlaskConical } from 'lucide-react';
 import type { Role } from '@/types';
 import { useIncidentStore } from '@/context/IncidentStore';
 import { toast, useUI } from '@/context/uiStore';
 import { APP_NAME, ROLE_LABEL } from '@/content/content';
 import { checkBackend, type BackendState } from '@/services/api';
-import { BackgroundLayer, CursorLayer } from '@/components/effects/EffectLayers';
 import { IncidentDrawer, useIncidentParam } from '@/components/incidents/IncidentDrawer';
 import { Modal, Toaster } from '@/components/common/Overlay';
 import { QuickDemo } from './QuickDemo';
@@ -37,13 +36,13 @@ function BackendPill() {
     };
   }, []);
   const map = {
-    mock: { label: 'Demo mode', Icon: FlaskConical, color: '#c0784a', title: 'Running on the in-browser mock store (VITE_USE_REAL_API=false).' },
-    online: { label: 'Backend online', Icon: Wifi, color: '#22c55e', title: 'Backend /api/health is reachable.' },
-    offline: { label: 'Backend offline', Icon: WifiOff, color: '#ef4444', title: 'Backend unreachable; mock fallbacks are in use.' },
-    checking: { label: 'Checking…', Icon: Wifi, color: '#9aa7b8', title: 'Checking backend' },
+    mock: { label: 'Local mode', Icon: FlaskConical, color: '#a35a2a', title: 'Running on the in-browser mock store (VITE_USE_REAL_API=false).' },
+    online: { label: 'Backend online', Icon: Wifi, color: '#1f8a5b', title: 'Backend /api/health is reachable.' },
+    offline: { label: 'Backend offline', Icon: WifiOff, color: '#c0362c', title: 'Backend unreachable; mock fallbacks are in use.' },
+    checking: { label: 'Checking…', Icon: Wifi, color: '#68777b', title: 'Checking backend' },
   }[state];
   return (
-    <span className="chip hidden md:inline-flex" style={{ color: map.color, borderColor: `${map.color}55` }} title={map.title}>
+    <span className="chip" style={{ color: map.color, borderColor: `${map.color}55` }} title={map.title}>
       <map.Icon size={12} aria-hidden /> {map.label}
     </span>
   );
@@ -68,7 +67,7 @@ function Notifications({ role }: { role: Role }) {
   return (
     <div className="relative" ref={ref}>
       <button
-        className="btn btn-ghost relative !px-2.5"
+        className="btn btn-quiet relative !px-2.5"
         aria-label={`Notifications${unread ? `, ${unread} unread` : ''}`}
         aria-expanded={open}
         onClick={() => {
@@ -109,89 +108,154 @@ function Notifications({ role }: { role: Role }) {
   );
 }
 
+const ROLE_SECTIONS: Partial<Record<Role, { to: string; label: string; end?: boolean }[]>> = {
+  citizen: [
+    { to: '/citizen', label: 'Report pollution', end: true },
+    { to: '/citizen/complaints', label: 'My complaints' },
+  ],
+  admin: [
+    { to: '/admin', label: 'Incidents', end: true },
+    { to: '/admin/actions', label: 'Action & Management' },
+    { to: '/admin/timeline', label: 'Timeline' },
+    { to: '/admin/analytics', label: 'Analytics' },
+    { to: '/admin/import', label: 'Data Import & Analysis' },
+    { to: '/admin/reports', label: 'Incident Reports' },
+  ],
+};
+
+export function currentSection(role: Role, pathname: string) {
+  return ROLE_SECTIONS[role]?.find((x) => (x.end ? pathname === x.to : pathname.startsWith(x.to)))?.label;
+}
+
 export function AppShell() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const role = roleFromPath(pathname);
   const resetDemo = useIncidentStore((s) => s.resetDemo);
-  const { effectsEnabled, cursorEnabled, setEffects, setCursor, setDemoOpen } = useUI();
+  const verify = useIncidentStore((s) => s.incidents.filter((i) => i.status === 'Verification Pending').length);
+  const pending = useIncidentStore((s) => s.potentials.filter((p) => p.status === 'pending').length);
+  const { setDemoOpen } = useUI();
   const [confirmReset, setConfirmReset] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
+  const section = currentSection(role, pathname);
 
-  // Move focus to main content on role change for screen-reader users.
+  // Move focus to main content on navigation for screen-reader users.
   useEffect(() => {
     mainRef.current?.focus({ preventScroll: true });
     window.scrollTo(0, 0);
+    setMenuOpen(false);
   }, [pathname]);
 
+  const badge = (label: string) => (label === 'Action & Management' ? verify : label.startsWith('Data') ? pending : 0);
+
+  const sidebar = (
+    <div className="flex h-full flex-col gap-6 px-4 py-5">
+      <button onClick={() => navigate('/')} className="flex items-center gap-2.5 text-left" aria-label={`${APP_NAME} home`}>
+        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-white">
+          <Leaf size={18} aria-hidden />
+        </span>
+        <span>
+          <span className="block text-[17px] font-bold leading-tight text-ink-100 [font-family:var(--font-display)]">{APP_NAME}</span>
+          <span className="muted block !text-[11px] leading-tight">Environmental Intelligence</span>
+        </span>
+      </button>
+
+      <nav aria-label="Dashboards" className="space-y-5">
+        <div>
+          <p className="eyebrow mb-1.5 px-2">Workspace</p>
+          <ul className="space-y-0.5">
+            {ROLE_ROUTES.map(({ role: r, path, icon: Icon }) => (
+              <li key={r}>
+                <NavLink
+                  to={path}
+                  className={cn(
+                    'flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[14px] transition-colors [font-family:var(--font-nav)]',
+                    role === r ? 'bg-mint font-bold text-accent-strong' : 'text-ink-300 hover:bg-ink-800 hover:text-ink-100',
+                  )}
+                >
+                  <Icon size={16} aria-hidden />
+                  {ROLE_LABEL[r]}
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+        </div>
+        {ROLE_SECTIONS[role] && (
+          <div>
+            <p className="eyebrow mb-1.5 px-2">{ROLE_LABEL[role]}</p>
+            <ul className="space-y-0.5">
+              {ROLE_SECTIONS[role]!.map((sct) => (
+                <li key={sct.to}>
+                  <NavLink
+                    to={sct.to}
+                    end={sct.end}
+                    className={({ isActive }) =>
+                      cn(
+                        'flex items-center justify-between rounded-md py-1.5 pl-4 pr-2.5 text-[13.5px] [font-family:var(--font-nav)]',
+                        isActive ? 'font-bold text-accent-strong shadow-[inset_2px_0_0_var(--color-accent)]' : 'text-ink-300 hover:text-ink-100',
+                      )
+                    }
+                  >
+                    {sct.label}
+                    {badge(sct.label) > 0 && <span className="num rounded-full bg-[#7456a81a] px-1.5 text-[11px] text-purple">{badge(sct.label)}</span>}
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </nav>
+
+      <div className="mt-auto space-y-2">
+        <button className="btn btn-primary w-full" onClick={() => setDemoOpen(true)}>
+          <PlayCircle size={16} aria-hidden /> Quick Demo
+        </button>
+        <div className="flex items-center justify-between gap-1 px-1">
+          <BackendPill />
+          <button className="btn btn-quiet !min-h-8 !px-2 !text-[12.5px]" onClick={() => setConfirmReset(true)} title="Clear local data">
+            <RotateCcw size={14} aria-hidden /> Clear data
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="relative min-h-dvh">
-      <BackgroundLayer />
-      <CursorLayer />
-      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[2000] focus:rounded focus:bg-accent focus:px-3 focus:py-2 focus:text-ink-950">
+    <div className="min-h-dvh bg-ink-950">
+      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[2000] focus:rounded focus:bg-accent focus:px-3 focus:py-2 focus:text-white">
         Skip to main content
       </a>
 
-      <header className="sticky top-0 z-[1000] border-b border-[var(--line)] bg-ink-950/92 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2 sm:px-6">
-          <button onClick={() => navigate('/admin')} className="flex items-center gap-2.5 text-left" aria-label={`${APP_NAME} home`}>
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-soft">
-              <Leaf size={16} className="text-accent" aria-hidden />
-            </span>
-            <span className="hidden sm:block">
-              <span className="block text-[16px] font-bold leading-tight [font-family:var(--font-display)]">{APP_NAME}</span>
-              <span className="muted block !text-[11px] leading-tight">Environmental Intelligence &amp; Compliance</span>
-            </span>
-          </button>
-
-          <nav aria-label="Dashboards" className="order-3 flex w-full gap-1 overflow-x-auto lg:order-none lg:ml-4 lg:w-auto">
-            {ROLE_ROUTES.map(({ role: r, path, icon: Icon }) => (
-              <NavLink
-                key={r}
-                to={path}
-                className={({ isActive }) =>
-                  cn(
-                    'flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 whitespace-nowrap rounded-md px-1 py-1.5 text-[11px] transition-colors sm:flex-row sm:gap-1.5 sm:px-3 sm:text-[13.5px] lg:flex-none',
-                    isActive ? 'bg-ink-800 font-bold text-ink-100 shadow-[inset_0_-2px_0_var(--color-accent)]' : 'text-ink-400 hover:bg-ink-850 hover:text-ink-100',
-                  )
-                }
-              >
-                <Icon size={15} aria-hidden />
-                {ROLE_LABEL[r]}
-              </NavLink>
-            ))}
-          </nav>
-
-          <div className="ml-auto flex items-center gap-1.5">
-            <BackendPill />
-            <Notifications role={role} />
-            <button className="btn btn-quiet !px-2.5" title={effectsEnabled ? 'Turn visual effects off' : 'Turn visual effects on'} aria-pressed={effectsEnabled} onClick={() => setEffects(!effectsEnabled)}>
-              <Waves size={16} className={effectsEnabled ? 'text-accent' : 'text-ink-500'} aria-hidden />
-              <span className="sr-only">Visual effects</span>
-            </button>
-            <button className="btn btn-quiet hidden !px-2.5 md:inline-flex" title={cursorEnabled ? 'Turn glow cursor off' : 'Turn glow cursor on'} aria-pressed={cursorEnabled} onClick={() => setCursor(!cursorEnabled)}>
-              <MousePointer2 size={16} className={cursorEnabled ? 'text-accent' : 'text-ink-500'} aria-hidden />
-              <span className="sr-only">Glow cursor</span>
-            </button>
-            <button className="btn btn-quiet !px-2.5" onClick={() => setConfirmReset(true)} title="Clear local data">
-              <RotateCcw size={16} aria-hidden />
-              <span className="hidden xl:inline">Reset</span>
-            </button>
-            <button className="btn btn-primary" onClick={() => setDemoOpen(true)}>
-              <PlayCircle size={16} aria-hidden />
-              <span className="hidden sm:inline">Quick Demo</span>
-            </button>
-          </div>
+      <aside className="fixed inset-y-0 left-0 z-[1000] hidden w-60 border-r border-[var(--line)] bg-white lg:block">{sidebar}</aside>
+      {menuOpen && (
+        <div className="fixed inset-0 z-[1100] lg:hidden">
+          <button aria-label="Close menu" className="absolute inset-0 bg-[#1c2a30]/40" onClick={() => setMenuOpen(false)} />
+          <aside className="relative h-full w-64 bg-white shadow-xl">{sidebar}</aside>
         </div>
-      </header>
+      )}
 
-      <main id="main" ref={mainRef} tabIndex={-1} className="relative z-10 mx-auto max-w-[1440px] px-4 py-6 outline-none sm:px-6">
-        <Outlet />
-      </main>
+      <div className="lg:pl-60">
+        <header className="sticky top-0 z-[900] flex items-center gap-3 border-b border-[var(--line)] bg-white/95 px-4 py-2.5 backdrop-blur-sm sm:px-6">
+          <button className="btn btn-quiet !px-2 lg:hidden" onClick={() => setMenuOpen(true)} aria-label="Open menu">
+            <Menu size={18} />
+          </button>
+          <p className="truncate text-[14px] text-ink-300 [font-family:var(--font-nav)]">
+            <span className="font-bold text-ink-100">{ROLE_LABEL[role]}</span>
+            {section && <> · {section}</>}
+          </p>
+          <div className="ml-auto flex items-center gap-1.5">
+            <Notifications role={role} />
+          </div>
+        </header>
 
-      <footer className="muted relative z-10 mx-auto max-w-[1440px] px-4 pb-6 sm:px-6">
-        Hackathon prototype. Role switching is a demo convenience, not authentication. All records shown were entered or imported by users; analysis is rule-based.
-      </footer>
+        <main id="main" ref={mainRef} tabIndex={-1} className="mx-auto max-w-[1360px] px-4 py-6 outline-none sm:px-6">
+          <Outlet />
+        </main>
+        <footer className="muted mx-auto max-w-[1360px] px-4 pb-6 sm:px-6">
+          Hackathon prototype. Role switching is a demo convenience, not authentication. All records shown were entered or imported by users; analysis is rule-based.
+        </footer>
+      </div>
 
       <IncidentDrawer role={role} />
       <QuickDemo />

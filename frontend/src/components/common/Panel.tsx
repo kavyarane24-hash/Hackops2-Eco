@@ -92,7 +92,7 @@ export function Field({
       </label>
       {children}
       {error ? (
-        <p id={`${htmlFor}-error`} role="alert" className="mt-1 text-xs text-[#fca5a5]">
+        <p id={`${htmlFor}-error`} role="alert" className="mt-1 text-xs text-[#b42318]">
           {error}
         </p>
       ) : (
@@ -114,7 +114,7 @@ export function KeyValue({ k, v, mono }: { k: string; v: ReactNode; mono?: boole
 /** Compact inline KPI row: many numbers, one surface. */
 export function KpiStrip({ items }: { items: { label: string; value: ReactNode; tone?: string; hint?: string; onClick?: () => void; active?: boolean }[] }) {
   return (
-    <div className="panel reveal grid grid-cols-2 divide-[var(--line)] sm:grid-cols-4 lg:flex lg:divide-x">
+    <div className="panel reveal grid grid-cols-2 sm:grid-cols-3 2xl:grid-cols-6">
       {items.map((k) => {
         const Comp = k.onClick ? 'button' : 'div';
         return (

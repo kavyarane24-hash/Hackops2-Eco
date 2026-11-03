@@ -23,7 +23,7 @@ export function Drawer({ open, onClose, title, children, width = 'max-w-3xl' }: 
   if (!open) return null;
   return createPortal(
     <div className="fixed inset-0 z-[1100] flex justify-end" data-lenis-prevent>
-      <button aria-label="Close panel" className="absolute inset-0 bg-ink-950/70" onClick={onClose} />
+      <button aria-label="Close panel" className="absolute inset-0 bg-[#1c2a30]/40" onClick={onClose} />
       <div
         ref={ref}
         tabIndex={-1}
@@ -51,7 +51,7 @@ export function Modal({ open, onClose, title, children, footer }: { open: boolea
   if (!open) return null;
   return createPortal(
     <div className="fixed inset-0 z-[1200] flex items-center justify-center p-4" data-lenis-prevent>
-      <button aria-label="Close dialog" className="absolute inset-0 bg-ink-950/75" onClick={onClose} />
+      <button aria-label="Close dialog" className="absolute inset-0 bg-[#1c2a30]/45" onClick={onClose} />
       <div role="dialog" aria-modal="true" aria-label={title} className="panel-solid relative w-full max-w-lg shadow-2xl">
         <header className="flex items-center justify-between border-b border-[var(--line)] px-5 py-3">
           <h2 className="panel-title">{title}</h2>
@@ -70,7 +70,7 @@ export function Modal({ open, onClose, title, children, footer }: { open: boolea
 const TONE = {
   success: { Icon: CheckCircle2, color: '#22c55e' },
   error: { Icon: AlertCircle, color: '#ef4444' },
-  info: { Icon: Info, color: '#3ad6e0' },
+  info: { Icon: Info, color: '#087f8c' },
 };
 
 export function Toaster() {
