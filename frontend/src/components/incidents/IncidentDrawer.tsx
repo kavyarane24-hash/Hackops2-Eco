@@ -1,14 +1,15 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { FileDown, MapPin } from 'lucide-react';
 import type { Role } from '@/types';
 import { useIncidentStore } from '@/context/IncidentStore';
 import { Drawer } from '@/components/common/Overlay';
-import { DemoTag, SeverityBadge, StatusBadge } from '@/components/common/Badges';
+import { SeverityBadge, StatusBadge } from '@/components/common/Badges';
+import { IncidentDayTimeline, StageProgress } from '@/components/timeline/Timeline';
 import { KeyValue } from '@/components/common/Panel';
 import { MediaGrid } from '@/components/common/Media';
 import { AIAnalysisPanel, AnalysisState, ComplianceTable, EvidenceList } from './AnalysisPanels';
-import { AllocationForm, FieldUpdateList, Timeline, VerificationActions } from './Workflow';
+import { AllocationForm, FieldUpdateList, VerificationActions } from './Workflow';
 import { downloadIncidentPdf } from '@/services/reports';
 import { fmtDate, fmtDateTime, isValidCoord } from '@/utils';
 import { useFlashOnChange } from '@/hooks/motion';
@@ -18,25 +19,33 @@ import { cn } from '@/lib/utils';
 export function useIncidentParam() {
   const [params, setParams] = useSearchParams();
   const id = params.get('incident');
-  const open = (incidentId: string) =>
+  const tab = params.get('tab');
+  const open = (incidentId: string, tabName?: string) =>
     setParams((p) => {
       p.set('incident', incidentId);
+      if (tabName) p.set('tab', tabName);
+      else p.delete('tab');
       return p;
     });
   const close = () =>
     setParams((p) => {
       p.delete('incident');
+      p.delete('tab');
       return p;
     });
-  return { id, open, close };
+  return { id, tab, open, close };
 }
 
 type Tab = 'overview' | 'analysis' | 'evidence' | 'compliance' | 'field' | 'history' | 'manage';
 
 export function IncidentDrawer({ role }: { role: Role }) {
-  const { id, close } = useIncidentParam();
+  const { id, tab: tabParam, close } = useIncidentParam();
   const incident = useIncidentStore((s) => s.incidents.find((i) => i.id === id));
   const [tab, setTab] = useState<Tab>('overview');
+  // Deep link to a tab, e.g. ?incident=X&tab=manage from Action & Management.
+  useEffect(() => {
+    if (tabParam) setTab(tabParam as Tab);
+  }, [tabParam, id]);
   const statusRef = useRef<HTMLSpanElement>(null);
   useFlashOnChange(statusRef, incident?.status);
 
@@ -73,7 +82,6 @@ export function IncidentDrawer({ role }: { role: Role }) {
             <span ref={statusRef} className="rounded-full">
               <StatusBadge status={incident.status} />
             </span>
-            {incident.isDemo && <DemoTag label="Demo incident" />}
           </div>
         ) : (
           <span className="text-sm">Incident not found</span>
@@ -101,6 +109,7 @@ export function IncidentDrawer({ role }: { role: Role }) {
           <div className="space-y-5 p-5">
             {tab === 'overview' && (
               <>
+                <section aria-label="Progress"><StageProgress incident={incident} /></section>
                 <AnalysisState incident={incident} />
                 <section>
                   <h3 className="eyebrow mb-1">{incident.source === 'data_import' ? 'Finding (from imported data)' : `Complaint (${c.language === 'hi' ? 'Hindi, original' : 'English'})`}</h3>
@@ -171,7 +180,7 @@ export function IncidentDrawer({ role }: { role: Role }) {
             {tab === 'evidence' && (a ? <EvidenceList evidence={a.supportingEvidence} /> : <AnalysisState incident={incident} />)}
             {tab === 'compliance' && (a ? <ComplianceTable rows={a.compliance} /> : <AnalysisState incident={incident} />)}
             {tab === 'field' && <FieldUpdateList updates={incident.fieldUpdates} />}
-            {tab === 'history' && <Timeline history={incident.history} />}
+            {tab === 'history' && <IncidentDayTimeline incident={incident} />}
             {tab === 'manage' && role === 'admin' && (
               <>
                 <section>

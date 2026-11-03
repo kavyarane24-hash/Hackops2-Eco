@@ -3,7 +3,7 @@ import { ArrowDown, ArrowUp, ArrowUpDown, Search, X } from 'lucide-react';
 import type { Incident, IncidentCategory, IncidentStatus, Severity } from '@/types';
 import { INCIDENT_STATUSES } from '@/types';
 import { CATEGORIES, DEPARTMENTS, SEVERITIES, SEVERITY_RANK } from '@/config/constants';
-import { SeverityBadge, StatusBadge, DemoTag } from '@/components/common/Badges';
+import { SeverityBadge, StatusBadge } from '@/components/common/Badges';
 import { EmptyState } from '@/components/common/Panel';
 import { daysUntil, fmtDateTime } from '@/utils';
 import { cn } from '@/lib/utils';
@@ -130,7 +130,6 @@ export function IncidentTable({ incidents, onOpen, highlightId }: { incidents: I
               >
                 <td className="px-3 py-2.5">
                   <span className="num whitespace-nowrap font-semibold text-ink-100">{i.id}</span>
-                  {i.isDemo ? <div className="mt-0.5"><DemoTag /></div> : <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-accent">New</div>}
                 </td>
                 <td className="max-w-[280px] px-3 py-2.5">
                   <p className="truncate text-ink-100">{i.analysis?.category ?? (i.analysisState === 'pending' ? 'Analysing…' : 'Unclassified')}</p>

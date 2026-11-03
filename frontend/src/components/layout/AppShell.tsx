@@ -173,7 +173,7 @@ export function AppShell() {
               <MousePointer2 size={16} className={cursorEnabled ? 'text-accent' : 'text-ink-500'} aria-hidden />
               <span className="sr-only">Glow cursor</span>
             </button>
-            <button className="btn btn-quiet !px-2.5" onClick={() => setConfirmReset(true)} title="Reset demo data">
+            <button className="btn btn-quiet !px-2.5" onClick={() => setConfirmReset(true)} title="Clear local data">
               <RotateCcw size={16} aria-hidden />
               <span className="hidden xl:inline">Reset</span>
             </button>
@@ -190,7 +190,7 @@ export function AppShell() {
       </main>
 
       <footer className="muted relative z-10 mx-auto max-w-[1440px] px-4 pb-6 sm:px-6">
-        Hackathon prototype. Role switching is a demo convenience, not authentication. Incidents, readings and coordinates marked “demo” are simulated.
+        Hackathon prototype. Role switching is a demo convenience, not authentication. All records shown were entered or imported by users; analysis is rule-based.
       </footer>
 
       <IncidentDrawer role={role} />
@@ -199,7 +199,7 @@ export function AppShell() {
       <Modal
         open={confirmReset}
         onClose={() => setConfirmReset(false)}
-        title="Reset demo data?"
+        title="Clear all local data?"
         footer={
           <>
             <button className="btn btn-ghost" onClick={() => setConfirmReset(false)}>Cancel</button>
@@ -208,15 +208,15 @@ export function AppShell() {
               onClick={() => {
                 resetDemo();
                 setConfirmReset(false);
-                toast('Demo data reset to the seeded incidents.', 'info');
+                toast('All local data cleared.', 'info');
               }}
             >
-              Reset data
+              Clear data
             </button>
           </>
         }
       >
-        <p className="text-sm text-ink-200">This removes every complaint, assignment and field update created in this browser and restores the five seeded demo incidents.</p>
+        <p className="text-sm text-ink-200">This permanently removes every complaint, import, incident, assignment, field update and report stored in this browser. The app will start empty.</p>
       </Modal>
     </div>
   );

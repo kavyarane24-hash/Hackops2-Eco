@@ -1,8 +1,7 @@
-// Simulated air-quality data. Every value here is DEMO DATA, generated
-// deterministically so charts are stable. Replace with a real feed (e.g. CPCB
-// CAAQMS via the backend) when available.
-import type { AirQualityPoint } from '@/types';
-import { clamp, hashString, seeded } from '@/utils';
+// Air-quality helpers over real imported readings: CPCB sub-indices, daily
+// series and a naive trend projection. No values are generated here.
+import type { AirQualityPoint, EnvironmentalReading } from '@/types';
+import { clamp } from '@/utils';
 
 /**
  * Approximate CPCB sub-index for PM2.5 (24-h, µg/m³) using the published
@@ -40,30 +39,27 @@ const dayLabel = (d: Date) => d.toLocaleDateString('en-IN', { day: '2-digit', mo
 /** Local-calendar YYYY-MM-DD (toISOString would shift to UTC and repeat days in IST). */
 const dayKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
-/** 30 days of simulated daily 24-h averages for a named station. */
-export function stationSeries(station: string, days = 30, intensity = 1): AirQualityPoint[] {
-  const rnd = seeded(hashString(station));
-  const out: AirQualityPoint[] = [];
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  let pm25 = 95 * intensity;
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(today.getDate() - i);
-    // Slow upward drift (post-monsoon season pattern) plus day-to-day noise.
-    const drift = ((days - i) / days) * 40 * intensity;
-    pm25 = clamp(pm25 * 0.55 + (80 * intensity + drift) * 0.45 + (rnd() - 0.45) * 38, 25, 420);
-    const pm10 = clamp(pm25 * (1.55 + rnd() * 0.35), 40, 600);
-    const aqi = Math.max(pm25SubIndex(pm25), pm10SubIndex(pm10));
-    out.push({
-      date: dayKey(d),
-      label: dayLabel(d),
-      aqi,
-      pm25: Math.round(pm25),
-      pm10: Math.round(pm10),
-    });
+/**
+ * Daily series from real imported readings for one station: mean of the
+ * day's values per pollutant. Days without readings are simply absent.
+ */
+export function dailySeriesFromReadings(readings: EnvironmentalReading[]): AirQualityPoint[] {
+  const byDay = new Map<string, EnvironmentalReading[]>();
+  for (const r of readings) {
+    const d = new Date(r.timestamp);
+    const key = dayKey(d);
+    byDay.set(key, [...(byDay.get(key) ?? []), r]);
   }
-  return out;
+  return [...byDay.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([key, rs]) => {
+    const mean = (k: 'PM2.5' | 'PM10' | 'AQI') => {
+      const v = rs.map((r) => r.values[k]).filter((x): x is number => x != null);
+      return v.length ? Math.round(v.reduce((x, y) => x + y, 0) / v.length) : undefined;
+    };
+    const pm25 = mean('PM2.5'), pm10 = mean('PM10'), aqiGiven = mean('AQI');
+    const aqi = aqiGiven ?? (pm25 != null || pm10 != null ? Math.max(pm25 != null ? pm25SubIndex(pm25) : 0, pm10 != null ? pm10SubIndex(pm10) : 0) : undefined);
+    const [y, m, d] = key.split('-').map(Number);
+    return { date: key, label: dayLabel(new Date(y, m - 1, d)), aqi, pm25, pm10 } as unknown as AirQualityPoint;
+  });
 }
 
 /** Least-squares slope over the last n points. */
@@ -113,19 +109,4 @@ export function trendDirection(series: AirQualityPoint[]): 'rising' | 'falling' 
   if (s > 4) return 'rising';
   if (s < -4) return 'falling';
   return 'stable';
-}
-
-/** Named demo monitoring stations (simulated). */
-export const DEMO_STATIONS = [
-  { id: 'north', name: 'Demo Station – North Zone', lat: 28.78, lng: 77.08, intensity: 1.25 },
-  { id: 'central', name: 'Demo Station – Central Zone', lat: 28.65, lng: 77.2, intensity: 1.0 },
-  { id: 'east', name: 'Demo Station – East Zone', lat: 28.62, lng: 77.31, intensity: 1.1 },
-  { id: 'south', name: 'Demo Station – South Zone', lat: 28.52, lng: 77.2, intensity: 0.85 },
-] as const;
-
-export function nearestStation(lat: number | null, lng: number | null) {
-  if (lat == null || lng == null) return DEMO_STATIONS[1];
-  return DEMO_STATIONS.reduce((best, s) =>
-    (s.lat - lat) ** 2 + (s.lng - lng) ** 2 < (best.lat - lat) ** 2 + (best.lng - lng) ** 2 ? s : best,
-  );
 }

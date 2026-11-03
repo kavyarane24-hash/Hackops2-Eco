@@ -1,13 +1,13 @@
 import { useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Area, AreaChart, CartesianGrid, Legend, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { AlertTriangle, CheckCircle2, ChevronDown, Download, FileImage, FileJson, FileSpreadsheet, FileText, FileType, RotateCw, Trash2, UploadCloud, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ChevronDown, FileImage, FileJson, FileSpreadsheet, FileText, FileType, RotateCw, Trash2, UploadCloud, XCircle } from 'lucide-react';
 import type { DailyAggregate, FieldKey, ImportFile, PotentialIncident } from '@/types';
 import { useImportSession } from '@/context/importSession';
 import { useIncidentStore, OFFICERS } from '@/context/IncidentStore';
 import { toast } from '@/context/uiStore';
 import { Panel, EmptyState, Field, Spinner } from '@/components/common/Panel';
-import { SeverityBadge, UrgencyBadge, DemoTag } from '@/components/common/Badges';
+import { SeverityBadge, UrgencyBadge } from '@/components/common/Badges';
 import { Drawer } from '@/components/common/Overlay';
 import { AIAnalysisPanel, ComplianceTable, EvidenceList } from '@/components/incidents/AnalysisPanels';
 import { useIncidentParam } from '@/components/incidents/IncidentDrawer';
@@ -69,13 +69,6 @@ export default function DataImport() {
           <input ref={inputRef} type="file" multiple accept={ACCEPT} className="sr-only" aria-label="Choose files to import" onChange={(e) => { addFiles(Array.from(e.target.files ?? [])); e.target.value = ''; }} />
           <p className="muted">Limits: CSV/Excel/JSON 20 MB · PDF 25 MB · DOCX 15 MB · images 10 MB. Legacy .doc is not supported.</p>
         </div>
-        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px]">
-          <span className="muted">Try a sample:</span>
-          <a className="inline-flex items-center gap-1 text-accent hover:underline" href="/samples/demo-hourly-air-quality.csv" download><Download size={13} aria-hidden /> Hourly readings (CSV)</a>
-          <a className="inline-flex items-center gap-1 text-accent hover:underline" href="/samples/demo-daily-averages.json" download><Download size={13} aria-hidden /> Daily averages (JSON)</a>
-          <DemoTag label="Simulated sample data" />
-        </div>
-
         {files.length > 0 && (
           <ul className="mt-4 divide-y divide-[var(--line)]">
             {files.map((f) => {

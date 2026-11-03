@@ -2,14 +2,15 @@ import { useMemo, useRef, useState } from 'react';
 import { Layers, MapPinOff, X } from 'lucide-react';
 import { useIncidentStore } from '@/context/IncidentStore';
 import { Panel } from '@/components/common/Panel';
-import { SeverityBadge, StatusBadge, DemoTag, UrgencyBadge } from '@/components/common/Badges';
+import { SeverityBadge, StatusBadge, UrgencyBadge } from '@/components/common/Badges';
+import { IncidentDayTimeline, StageProgress } from '@/components/timeline/Timeline';
+import { buildEvents, EVENT_META } from '@/services/timeline';
 import { IncidentMap, computeHotspots } from '@/components/maps/IncidentMap';
 import { FilterBar, applyFilters, EMPTY_FILTERS, type IncidentFilters } from '@/components/incidents/IncidentTable';
 import { useIncidentParam } from '@/components/incidents/IncidentDrawer';
 import { DEPARTMENTS, OPEN_STATUSES, SEVERITIES, SEVERITY_COLOR } from '@/config/constants';
 import { useReveal } from '@/hooks/motion';
 import { daysUntil, fmtDate, fmtDateTime, isValidCoord } from '@/utils';
-import { INCIDENT_STATUSES } from '@/types';
 
 function zoneOf(address: string) {
   const m = address.match(/(North-West|North|South|East|West|Central) Delhi/i);
@@ -29,6 +30,7 @@ export default function StakeholderDashboard() {
   const missingCoords = visible.filter((i) => !isValidCoord(i.complaint.location.lat, i.complaint.location.lng));
   const selected = incidents.find((i) => i.id === selectedId);
   const hs = useMemo(() => computeHotspots(visible), [visible]);
+  const recent = useMemo(() => buildEvents(incidents, []).slice(0, 8), [incidents]);
 
   const byDept = DEPARTMENTS.map((d) => {
     const list = incidents.filter((i) => i.assignment?.department === d);
@@ -91,7 +93,6 @@ export default function StakeholderDashboard() {
                 <MapPinOff size={11} aria-hidden /> {missingCoords.length} without valid coordinates
               </span>
             )}
-            <DemoTag label="Demo coordinates" />
           </div>
         </div>
 
@@ -121,17 +122,29 @@ export default function StakeholderDashboard() {
                   <div><dt className="text-ink-400">Reported</dt><dd className="num">{fmtDateTime(selected.complaint.timestamp)}</dd></div>
                 </dl>
                 <p className="text-xs text-ink-300">{selected.complaint.location.address}</p>
-                <div>
-                  <p className="mb-1 text-[11px] text-ink-400">Action progress</p>
-                  <div className="flex gap-1">
-                    {INCIDENT_STATUSES.filter((s) => s !== 'Reopened' && s !== 'Action Submitted').map((s, idx, arr) => {
-                      const cur = arr.indexOf(selected.status === 'Reopened' ? 'Allocated' : selected.status === 'Action Submitted' ? 'Verification Pending' : selected.status);
-                      return <span key={s} title={s} className={`h-1.5 flex-1 rounded-full ${idx <= cur ? 'bg-accent' : 'bg-ink-700'}`} />;
-                    })}
-                  </div>
-                </div>
+                <StageProgress incident={selected} />
+                <details className="group">
+                  <summary className="cursor-pointer text-[13px] text-ink-200 [font-family:var(--font-nav)]">Activity timeline</summary>
+                  <div className="mt-3 max-h-72 overflow-y-auto pr-1"><IncidentDayTimeline incident={selected} /></div>
+                </details>
                 <button className="btn btn-primary w-full" onClick={() => open(selected.id)}>Open complete details</button>
               </div>
+            )}
+          </Panel>
+
+          <Panel title="Recent activity" description="Latest recorded actions across incidents" bodyClassName="px-5 pb-4 max-h-64 overflow-y-auto">
+            {recent.length === 0 ? <p className="muted">Nothing recorded yet.</p> : (
+              <ul className="space-y-2">
+                {recent.map((e) => (
+                  <li key={e.id} className="text-[13px]">
+                    <button className="text-left hover:text-accent" onClick={() => e.incidentId && setSelectedId(e.incidentId)}>
+                      <span className="mr-1.5 inline-block h-2 w-2 rounded-full" style={{ background: EVENT_META[e.type].color }} aria-hidden />
+                      <span className="font-bold">{EVENT_META[e.type].label}</span> <span className="num text-ink-300">{e.incidentId}</span>
+                    </button>
+                    <span className="muted block">{new Date(e.timestamp).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                  </li>
+                ))}
+              </ul>
             )}
           </Panel>
 

@@ -1,11 +1,13 @@
 import { useRef } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { BarChart3, FileText, LayoutList, UploadCloud } from 'lucide-react';
+import { BarChart3, CalendarDays, ClipboardCheck, FileText, LayoutList, UploadCloud } from 'lucide-react';
 import { useIncidentStore } from '@/context/IncidentStore';
 import { useReveal } from '@/hooks/motion';
 
 const TABS = [
   { to: '/admin', end: true, label: 'Operations', icon: LayoutList },
+  { to: '/admin/actions', label: 'Action & Management', icon: ClipboardCheck },
+  { to: '/admin/timeline', label: 'Timeline', icon: CalendarDays },
   { to: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
   { to: '/admin/import', label: 'Data Import & Analysis', icon: UploadCloud },
   { to: '/admin/reports', label: 'Incident Reports', icon: FileText },
@@ -30,7 +32,7 @@ export default function AdminLayout() {
           <NavLink key={to} to={to} end={end} className={({ isActive }) => `tab ${isActive ? 'active' : ''}`}>
             <Icon size={15} aria-hidden />
             {label}
-            {label === 'Operations' && verify > 0 && <span className="num rounded-full bg-[#c084fc22] px-1.5 text-[11px] text-[#d8b4fe]" title="Awaiting verification">{verify}</span>}
+            {label === 'Action & Management' && verify > 0 && <span className="num rounded-full bg-[#c084fc22] px-1.5 text-[11px] text-[#d8b4fe]" title="Awaiting verification">{verify}</span>}
             {label.startsWith('Data') && pending > 0 && <span className="num rounded-full bg-accent-soft px-1.5 text-[11px] text-accent" title="Potential incidents awaiting review">{pending}</span>}
           </NavLink>
         ))}

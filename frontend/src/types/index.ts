@@ -161,7 +161,8 @@ export interface AIAnalysisOutput {
   trendEstimate: TrendEstimate;
   recommendations: string[];
   compliance: ComplianceComparison[];
-  environmentalContext: EnvironmentalContext;
+  /** Present only when real (imported) monitoring data exists near the location. */
+  environmentalContext?: EnvironmentalContext;
   generatedBy: 'mock-rules' | 'backend-ai';
   generatedAt: string;
   engineNote?: string;

@@ -32,6 +32,7 @@ interface Props {
   stationName: string;
   defaultMetric?: Metric;
   height?: number;
+  simulated?: boolean;
 }
 
 /**
@@ -39,7 +40,7 @@ interface Props {
  * - AQI: CPCB AQI category bands.
  * - PM2.5 / PM10: NAAQS 24-hour limit, compared only with 24-hour averages.
  */
-export function AirQualityChart({ series, projection = [], comparison, stationName, defaultMetric = 'aqi', height = 280 }: Props) {
+export function AirQualityChart({ series, projection = [], comparison, stationName, defaultMetric = 'aqi', height = 280, simulated = false }: Props) {
   const [metric, setMetric] = useState<Metric>(defaultMetric);
   const [range, setRange] = useState<(typeof RANGES)[number]>(14);
   const [showCompare, setShowCompare] = useState(false);
@@ -62,7 +63,8 @@ export function AirQualityChart({ series, projection = [], comparison, stationNa
   const maxY = Math.max(...data.map((d) => Math.max(d.value ?? 0, d.projected ?? 0, d.compare ?? 0)), limit ?? 0);
 
   const latest = series[series.length - 1];
-  const avg = Math.round(series.slice(-range).reduce((a, p) => a + p[metric], 0) / Math.max(1, Math.min(range, series.length)));
+  const recent = series.slice(-range).map((p) => p[metric]).filter((v): v is number => v != null);
+  const avg = recent.length ? Math.round(recent.reduce((a, v) => a + v, 0) / recent.length) : '—';
 
   return (
     <div>
@@ -110,7 +112,7 @@ export function AirQualityChart({ series, projection = [], comparison, stationNa
         <p className="text-xs text-ink-400">
           {range}-day mean <span className="num text-ink-200">{avg}</span>
         </p>
-        <DemoTag label="Simulated readings" />
+        {simulated && <DemoTag label="Simulated readings" />}
       </div>
 
       <div style={{ height }} role="img" aria-label={`${m.label} ${m.period} for ${stationName}, last ${range} days. Latest ${latest?.[metric]} ${m.unit}.`}>
