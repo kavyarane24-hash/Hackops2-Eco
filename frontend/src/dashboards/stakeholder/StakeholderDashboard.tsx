@@ -1,0 +1,198 @@
+import { useMemo, useRef, useState } from 'react';
+import { Layers, MapPinOff, X } from 'lucide-react';
+import { useIncidentStore } from '@/context/IncidentStore';
+import { Panel } from '@/components/common/Panel';
+import { SeverityBadge, StatusBadge, DemoTag, UrgencyBadge } from '@/components/common/Badges';
+import { IncidentMap, computeHotspots } from '@/components/maps/IncidentMap';
+import { FilterBar, applyFilters, EMPTY_FILTERS, type IncidentFilters } from '@/components/incidents/IncidentTable';
+import { useIncidentParam } from '@/components/incidents/IncidentDrawer';
+import { DEPARTMENTS, OPEN_STATUSES, SEVERITIES, SEVERITY_COLOR } from '@/config/constants';
+import { useReveal } from '@/hooks/motion';
+import { daysUntil, fmtDate, fmtDateTime, isValidCoord } from '@/utils';
+import { INCIDENT_STATUSES } from '@/types';
+
+function zoneOf(address: string) {
+  const m = address.match(/(North-West|North|South|East|West|Central) Delhi/i);
+  return m ? m[0] : 'Other / unspecified';
+}
+
+export default function StakeholderDashboard() {
+  const scope = useRef<HTMLDivElement>(null);
+  useReveal(scope);
+  const incidents = useIncidentStore((s) => s.incidents);
+  const { open } = useIncidentParam();
+  const [filters, setFilters] = useState<IncidentFilters>(EMPTY_FILTERS);
+  const [selectedId, setSelectedId] = useState<string | undefined>();
+  const [hotspots, setHotspots] = useState(true);
+
+  const visible = useMemo(() => applyFilters(incidents, filters), [incidents, filters]);
+  const missingCoords = visible.filter((i) => !isValidCoord(i.complaint.location.lat, i.complaint.location.lng));
+  const selected = incidents.find((i) => i.id === selectedId);
+  const hs = useMemo(() => computeHotspots(visible), [visible]);
+
+  const byDept = DEPARTMENTS.map((d) => {
+    const list = incidents.filter((i) => i.assignment?.department === d);
+    return {
+      d,
+      open: list.filter((i) => OPEN_STATUSES.includes(i.status)).length,
+      closed: list.filter((i) => i.status === 'Verified Closed').length,
+      overdue: list.filter((i) => i.status !== 'Verified Closed' && (daysUntil(i.assignment?.deadline) ?? 1) < 0).length,
+    };
+  });
+  const byArea = Object.entries(
+    incidents.reduce<Record<string, { open: number; critical: number }>>((acc, i) => {
+      const z = zoneOf(i.complaint.location.address);
+      acc[z] ??= { open: 0, critical: 0 };
+      if (i.status !== 'Verified Closed') acc[z].open++;
+      if (i.analysis?.severity === 'Critical' && i.status !== 'Verified Closed') acc[z].critical++;
+      return acc;
+    }, {}),
+  ).sort((a, b) => b[1].open - a[1].open);
+
+  return (
+    <div ref={scope} className="space-y-5">
+      <div className="reveal flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="eyebrow">Stakeholder · GIS monitoring</p>
+          <h1 className="page-title">Pollution hotspot map</h1>
+        </div>
+        <div className="flex flex-wrap items-center gap-3 text-xs text-ink-300">
+          {SEVERITIES.map((s) => (
+            <span key={s} className="inline-flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-full" style={{ background: SEVERITY_COLOR[s] }} aria-hidden /> {s}
+            </span>
+          ))}
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full border border-dashed border-ink-400 bg-ink-500/40" aria-hidden /> Closed
+          </span>
+        </div>
+      </div>
+
+      <div className="panel reveal p-3">
+        <FilterBar value={filters} onChange={setFilters} />
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="panel-solid reveal relative h-[62vh] min-h-[420px] overflow-hidden">
+          <IncidentMap incidents={visible} selectedId={selectedId} onSelect={setSelectedId} onOpenDetails={open} showHotspots={hotspots} />
+          <div className="pointer-events-none absolute left-3 top-3 z-[500] flex flex-col gap-2">
+            <button
+              className="btn btn-ghost pointer-events-auto !min-h-8 bg-ink-900/90 !text-xs"
+              aria-pressed={hotspots}
+              onClick={() => setHotspots((v) => !v)}
+            >
+              <Layers size={14} aria-hidden /> Hotspots {hotspots ? 'on' : 'off'} ({hs.length})
+            </button>
+          </div>
+          <div className="pointer-events-none absolute bottom-8 left-3 z-[500] flex flex-col gap-1">
+            <span className="chip pointer-events-auto bg-ink-900/90 num">{visible.length - missingCoords.length} on map</span>
+            {missingCoords.length > 0 && (
+              <span className="chip pointer-events-auto bg-ink-900/90 !text-sev-medium">
+                <MapPinOff size={11} aria-hidden /> {missingCoords.length} without valid coordinates
+              </span>
+            )}
+            <DemoTag label="Demo coordinates" />
+          </div>
+        </div>
+
+        <aside className="space-y-5">
+          <Panel
+            title={selected ? <span className="num">{selected.id}</span> : 'Incident details'}
+            actions={selected && (
+              <button className="btn btn-ghost !min-h-8 !px-2" aria-label="Clear selection" onClick={() => setSelectedId(undefined)}>
+                <X size={14} />
+              </button>
+            )}
+          >
+            {!selected ? (
+              <p className="text-sm text-ink-400">Click a marker on the map, or pick an incident below, to see its details here.</p>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex flex-wrap gap-1.5">
+                  {selected.analysis && <SeverityBadge severity={selected.analysis.severity} />}
+                  <StatusBadge status={selected.status} />
+                  {selected.analysis && <UrgencyBadge urgency={selected.analysis.urgency} />}
+                </div>
+                <p className="text-sm text-ink-100">{selected.analysis?.category ?? 'Awaiting analysis'}</p>
+                <dl className="grid grid-cols-2 gap-2 text-xs">
+                  <div><dt className="text-ink-400">Department</dt><dd>{selected.assignment?.department ?? 'Unassigned'}</dd></div>
+                  <div><dt className="text-ink-400">Officer</dt><dd>{selected.assignment?.officerName ?? '—'}</dd></div>
+                  <div><dt className="text-ink-400">Deadline</dt><dd className="num">{selected.assignment ? fmtDate(selected.assignment.deadline) : '—'}</dd></div>
+                  <div><dt className="text-ink-400">Reported</dt><dd className="num">{fmtDateTime(selected.complaint.timestamp)}</dd></div>
+                </dl>
+                <p className="text-xs text-ink-300">{selected.complaint.location.address}</p>
+                <div>
+                  <p className="mb-1 text-[11px] text-ink-400">Action progress</p>
+                  <div className="flex gap-1">
+                    {INCIDENT_STATUSES.filter((s) => s !== 'Reopened' && s !== 'Action Submitted').map((s, idx, arr) => {
+                      const cur = arr.indexOf(selected.status === 'Reopened' ? 'Allocated' : selected.status === 'Action Submitted' ? 'Verification Pending' : selected.status);
+                      return <span key={s} title={s} className={`h-1.5 flex-1 rounded-full ${idx <= cur ? 'bg-accent' : 'bg-ink-700'}`} />;
+                    })}
+                  </div>
+                </div>
+                <button className="btn btn-primary w-full" onClick={() => open(selected.id)}>Open complete details</button>
+              </div>
+            )}
+          </Panel>
+
+          <Panel title="Incidents in view" eyebrow={`${visible.length} matching`} bodyClassName="p-0 max-h-72 overflow-y-auto">
+            <ul className="divide-y divide-[var(--line)]">
+              {visible.map((i) => (
+                <li key={i.id}>
+                  <button
+                    className={`flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-ink-800/60 ${i.id === selectedId ? 'bg-accent-soft' : ''}`}
+                    onClick={() => setSelectedId(i.id)}
+                  >
+                    <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: i.analysis ? SEVERITY_COLOR[i.analysis.severity] : '#6b7a8f' }} aria-hidden />
+                    <span className="num font-medium">{i.id}</span>
+                    <span className="ml-auto truncate text-xs text-ink-400">{i.status}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </Panel>
+        </aside>
+      </div>
+
+      <div className="grid gap-5 md:grid-cols-2">
+        <Panel title="Department-wise reporting" eyebrow="Assignments">
+          <table className="w-full text-sm">
+            <thead className="text-xs text-ink-400">
+              <tr><th scope="col" className="pb-2 text-left font-medium">Department</th><th scope="col" className="pb-2 text-right font-medium">Open</th><th scope="col" className="pb-2 text-right font-medium">Overdue</th><th scope="col" className="pb-2 text-right font-medium">Closed</th></tr>
+            </thead>
+            <tbody>
+              {byDept.map((r) => (
+                <tr key={r.d} className="border-t border-[var(--line)]">
+                  <td className="py-2 pr-2">
+                    <button className="text-left hover:text-accent" onClick={() => setFilters({ ...EMPTY_FILTERS, department: r.d })}>{r.d}</button>
+                  </td>
+                  <td className="num py-2 text-right">{r.open}</td>
+                  <td className={`num py-2 text-right ${r.overdue ? 'text-sev-critical' : 'text-ink-400'}`}>{r.overdue}</td>
+                  <td className="num py-2 text-right text-ink-300">{r.closed}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Panel>
+        <Panel title="Area-wise reporting" eyebrow="By zone (from address)">
+          <ul className="space-y-2">
+            {byArea.map(([zone, v]) => {
+              const max = Math.max(1, ...byArea.map(([, x]) => x.open));
+              return (
+                <li key={zone}>
+                  <div className="flex justify-between text-sm">
+                    <span>{zone}</span>
+                    <span className="num text-xs text-ink-300">{v.open} open{v.critical ? ` · ${v.critical} critical` : ''}</span>
+                  </div>
+                  <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-ink-700">
+                    <div className="h-full rounded-full" style={{ width: `${(v.open / max) * 100}%`, background: v.critical ? SEVERITY_COLOR.Critical : '#3ad6e0' }} />
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </Panel>
+      </div>
+    </div>
+  );
+}
