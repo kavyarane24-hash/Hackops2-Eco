@@ -99,3 +99,72 @@ export async function analyzeComplaint(c: ComplaintInput, readings: Environmenta
   await new Promise((r) => setTimeout(r, 900));
   return mockAnalyze(c, readings);
 }
+
+export interface EnvironmentalDataResponse {
+  success: boolean;
+  coordinates: {
+    requested: { latitude: number; longitude: number };
+    radiusKm: number;
+  };
+  data: {
+    airQuality: {
+      status: string;
+      pollutants?: Record<string, { value: number | null; unit: string; hasValue: boolean }>;
+      modelDomain?: string;
+      modelName?: string;
+      notice?: string;
+    };
+    weather: {
+      status: string;
+      current?: {
+        temperatureC: number | null;
+        relativeHumidityPct: number | null;
+        windSpeedKmh: number | null;
+        windDirectionDeg: number | null;
+        windDirectionCompass: string | null;
+      };
+    };
+    hotspots: {
+      status: string;
+      totalDetections?: number;
+      detections?: Array<{
+        latitude: number;
+        longitude: number;
+        brightnessKelvin?: number;
+        frpMegaWatts?: number;
+        confidence?: string;
+        distanceKm?: number;
+        isUpwind?: boolean;
+      }>;
+      notice?: string;
+      disclaimers?: Record<string, string>;
+    };
+  };
+  validation: {
+    status: string;
+    passed: boolean;
+    issues?: string[];
+  };
+  disclaimers: Record<string, string>;
+}
+
+/**
+ * Queries real Open-Meteo Air Quality, Open-Meteo Weather and NASA FIRMS
+ * data through the backend Intelligence Engine pipeline.
+ */
+export async function fetchEnvironmentalData(
+  lat: number,
+  lon: number,
+  radiusKm = 50
+): Promise<EnvironmentalDataResponse | undefined> {
+  if (!USE_REAL_API) return undefined;
+  try {
+    return await request<EnvironmentalDataResponse>(
+      `/api/intelligence/environmental-data?lat=${lat}&lon=${lon}&radius=${radiusKm}`,
+      undefined,
+      12000
+    );
+  } catch {
+    return undefined;
+  }
+}

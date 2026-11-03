@@ -1,3 +1,4 @@
+
 /**
  * server.js
  *
@@ -13,14 +14,13 @@
 
 'use strict';
 
-const path = require('path');
-
 // ── Environment variables – must load before anything else ────────────────────
-require('dotenv').config({ path: path.resolve(__dirname, '.env') });
+require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
+const path = require('path');
 
 const logger = require('./utils/logger');
 const errorHandler = require('./middleware/errorHandler');
@@ -41,9 +41,14 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000')
+const configuredOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:5173')
   .split(',')
   .map((o) => o.trim());
+// Ensure local development ports 3000 and 5173 are always permissible in non-production
+const allowedOrigins = Array.from(new Set([
+  ...configuredOrigins,
+  ...(process.env.NODE_ENV !== 'production' ? ['http://localhost:3000', 'http://localhost:5173'] : []),
+]));
 
 app.use(cors({
   origin: (origin, callback) => {
