@@ -1,5 +1,23 @@
-node_modules
+# Dependencies
+node_modules/
+
+# Environment secrets
 .env
 .env.local
+
+# Uploaded files – never committed; preserved on disk only
+uploads/images/*
+uploads/data/*
+
+# Keep the upload directory structure in git
+!uploads/images/.gitkeep
+!uploads/data/.gitkeep
+
+# OS noise
 .DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
 npm-debug.log*
