@@ -399,6 +399,11 @@ html.app-haus .btn-success:hover:not(:disabled) { background: rgb(55 110 111 / 0
 html.app-haus .btn-danger { background: rgb(46 21 27 / 0.6); border-color: rgb(218 123 147 / 0.45); color: #f6c1cd; }
 html.app-haus .btn-danger:hover:not(:disabled) { background: rgb(46 21 27 / 0.85); }
 html.app-haus .chip { border-color: var(--line-strong); }
+/* Native dropdown lists are painted by the OS; give them the dark theme so options stay readable. */
+html.app-haus select option,
+html.app-haus select optgroup { background-color: #22333e; color: #f6eef1; }
+html.app-haus select optgroup { color: #e8a0b2; font-weight: 700; }
+html.app-haus select option:checked { background-color: #376e6f; color: #ffffff; }
 html.app-haus .map-dark .leaflet-tile-pane { filter: saturate(0.6) brightness(0.9) contrast(0.95); }
 html.app-haus .input:hover { border-color: var(--line-strong); }
 html.app-haus .leaflet-control-attribution a { color: #e8a0b2 !important; }
