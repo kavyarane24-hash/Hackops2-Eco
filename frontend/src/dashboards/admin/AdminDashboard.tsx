@@ -50,11 +50,11 @@ export default function AdminDashboard() {
       <KpiStrip
         items={[
           { label: 'All incidents', value: incidents.length, onClick: () => pick('all'), active: quick === 'all' },
-          { label: 'Critical open', value: count('critical'), tone: '#c0362c', onClick: () => pick('critical'), active: quick === 'critical' },
-          { label: 'Unassigned', value: count('unassigned'), tone: '#f5b83d', onClick: () => pick('unassigned'), active: quick === 'unassigned' },
-          { label: 'Action pending', value: count('pending'), onClick: () => pick('pending'), active: quick === 'pending' },
-          { label: 'Awaiting verification', value: count('verification'), tone: '#6b4a9e', onClick: () => pick('verification'), active: quick === 'verification' },
-          { label: 'Resolved', value: count('resolved'), tone: '#1f8a5b', hint: avgH != null ? `Avg ${avgH} h to close` : undefined, onClick: () => pick('resolved'), active: quick === 'resolved' },
+          { label: 'Critical open', value: count('critical'), tone: '#f06b6b', onClick: () => pick('critical'), active: quick === 'critical' },
+          { label: 'Unassigned', value: count('unassigned'), tone: '#f2c14e', onClick: () => pick('unassigned'), active: quick === 'unassigned' },
+          { label: 'Action pending', value: count('pending'), tone: '#7cc4c2', onClick: () => pick('pending'), active: quick === 'pending' },
+          { label: 'Awaiting verification', value: count('verification'), tone: '#DA7B93', onClick: () => pick('verification'), active: quick === 'verification' },
+          { label: 'Resolved', value: count('resolved'), tone: '#6fd39b', hint: avgH != null ? `Avg ${avgH} h to close` : undefined, onClick: () => pick('resolved'), active: quick === 'resolved' },
         ]}
       />
 
@@ -64,11 +64,11 @@ export default function AdminDashboard() {
           description={`${visible.length} of ${incidents.length} shown${quick !== 'all' ? ` · filter: ${quick}` : ''}. Select a row for details, analysis, allocation and verification.`}
           actions={
             <>
-              <button className="btn btn-quiet" onClick={() => { downloadCsv(visible); toast(`Exported ${visible.length} incidents to CSV`, 'info'); }}>
-                <FileSpreadsheet size={15} aria-hidden /> CSV
+              <button className="btn btn-quiet border-[var(--line)] text-ink-200 hover:text-ink-100" onClick={() => { downloadCsv(visible); toast(`Exported ${visible.length} incidents to CSV`, 'info'); }}>
+                <FileSpreadsheet size={15} className="text-teal-lite" aria-hidden /> CSV
               </button>
-              <button className="btn btn-quiet" onClick={() => void downloadSummaryPdf(visible).then(() => toast('Summary PDF downloaded', 'info'))}>
-                <FileText size={15} aria-hidden /> Summary PDF
+              <button className="btn btn-quiet border-[var(--line)] text-ink-200 hover:text-ink-100" onClick={() => void downloadSummaryPdf(visible).then(() => toast('Summary PDF downloaded', 'info'))}>
+                <FileText size={15} className="text-teal-lite" aria-hidden /> Summary PDF
               </button>
             </>
           }
@@ -83,15 +83,15 @@ export default function AdminDashboard() {
         <aside className="space-y-5">
           <Panel title="Awaiting verification" description="Field submissions to review">
             {toVerify.length === 0 ? (
-              <p className="muted">Nothing to verify.</p>
+              <p className="muted text-ink-400">Nothing to verify.</p>
             ) : (
-              <ul className="-mx-2 space-y-0.5">
+              <ul className="-mx-2 space-y-1">
                 {toVerify.map((i) => (
                   <li key={i.id}>
-                    <button className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-ink-800" onClick={() => open(i.id)}>
-                      <span className="num text-[13px] font-bold">{i.id}</span>
+                    <button className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-muted-teal/20" onClick={() => open(i.id)}>
+                      <span className="num text-[13px] font-bold text-ink-100">{i.id}</span>
                       {i.analysis && <SeverityBadge severity={i.analysis.severity} />}
-                      <span className="muted ml-auto truncate">{timeAgo(i.updatedAt)}</span>
+                      <span className="muted ml-auto truncate text-ink-400">{timeAgo(i.updatedAt)}</span>
                     </button>
                   </li>
                 ))}
@@ -101,14 +101,14 @@ export default function AdminDashboard() {
 
           <Panel title="Needs allocation" description="Assessed, no officer yet">
             {unassigned.length === 0 ? (
-              <p className="muted">Every open incident is assigned.</p>
+              <p className="muted text-ink-400">Every open incident is assigned.</p>
             ) : (
-              <ul className="-mx-2 space-y-0.5">
+              <ul className="-mx-2 space-y-1">
                 {unassigned.slice(0, 6).map((i) => (
                   <li key={i.id}>
-                    <button className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-ink-800" onClick={() => open(i.id)}>
-                      <span className="num text-[13px] font-bold">{i.id}</span>
-                      {i.analysis ? <SeverityBadge severity={i.analysis.severity} /> : <span className="muted">Analysing…</span>}
+                    <button className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-muted-teal/20" onClick={() => open(i.id)}>
+                      <span className="num text-[13px] font-bold text-ink-100">{i.id}</span>
+                      {i.analysis ? <SeverityBadge severity={i.analysis.severity} /> : <span className="muted text-ink-400">Analysing…</span>}
                     </button>
                   </li>
                 ))}
@@ -118,16 +118,16 @@ export default function AdminDashboard() {
 
           <Panel title="Data import & reports">
             {pendingPotentials.length > 0 ? (
-              <Link to="/admin/import" className="mb-3 flex items-center justify-between rounded-md bg-accent-soft px-3 py-2 text-[13px] text-ink-100 hover:bg-accent/20">
-                <span><strong className="num text-accent">{pendingPotentials.length}</strong> potential incident{pendingPotentials.length === 1 ? '' : 's'} awaiting review</span>
-                <ArrowRight size={14} aria-hidden />
+              <Link to="/admin/import" className="mb-3 flex items-center justify-between rounded-xl border border-muted-teal/30 bg-muted-teal/20 px-3.5 py-2.5 text-[13px] text-ink-100 font-medium hover:bg-muted-teal/20 transition-colors shadow-2xs">
+                <span><strong className="num text-teal-lite font-bold">{pendingPotentials.length}</strong> potential incident{pendingPotentials.length === 1 ? '' : 's'} awaiting review</span>
+                <ArrowRight size={14} className="text-teal-lite" aria-hidden />
               </Link>
             ) : (
               <EmptyState title="No imports awaiting review" icon={<UploadCloud size={18} aria-hidden />} />
             )}
             <div className="flex flex-wrap gap-2">
-              <Link to="/admin/import" className="btn btn-ghost"><UploadCloud size={15} aria-hidden /> Import data</Link>
-              <Link to="/admin/reports" className="btn btn-ghost"><FileText size={15} aria-hidden /> Reports</Link>
+              <Link to="/admin/import" className="btn btn-ghost border-[var(--line-strong)] text-ink-200 hover:text-ink-100"><UploadCloud size={15} className="text-teal-lite" aria-hidden /> Import data</Link>
+              <Link to="/admin/reports" className="btn btn-ghost border-[var(--line-strong)] text-ink-200 hover:text-ink-100"><FileText size={15} className="text-teal-lite" aria-hidden /> Reports</Link>
             </div>
           </Panel>
         </aside>

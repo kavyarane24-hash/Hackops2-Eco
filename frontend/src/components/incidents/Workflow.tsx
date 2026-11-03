@@ -12,16 +12,16 @@ import { fmtDateTime, localDay } from '@/utils';
 export function Timeline({ history }: { history: HistoryEntry[] }) {
   const items = [...history].sort((a, b) => b.timestamp.localeCompare(a.timestamp));
   return (
-    <ol className="relative space-y-3 border-l border-[var(--line-strong)] pl-5">
+    <ol className="relative space-y-3.5 border-l-2 border-[var(--line)] pl-5">
       {items.map((h) => (
         <li key={h.id} className="relative">
-          <span className="absolute -left-[26px] top-1 h-3 w-3 rounded-full border-2 border-ink-900" style={{ background: STATUS_TONE[h.status] }} aria-hidden />
+          <span className="absolute -left-[27px] top-1 h-3.5 w-3.5 rounded-full border-2 border-white ring-1 ring-[var(--line-strong)]" style={{ background: STATUS_TONE[h.status] }} aria-hidden />
           <div className="flex flex-wrap items-baseline gap-x-2">
-            <span className="text-sm font-medium" style={{ color: STATUS_TONE[h.status] }}>{h.status}</span>
+            <span className="text-sm font-bold" style={{ color: STATUS_TONE[h.status] }}>{h.status}</span>
             <span className="num text-[11px] text-ink-400">{fmtDateTime(h.timestamp)}</span>
           </div>
-          <p className="text-xs text-ink-300">
-            {h.actor} <span className="text-ink-500">({h.role})</span>
+          <p className="text-xs text-ink-100 font-medium">
+            {h.actor} <span className="text-ink-400">({h.role})</span>
             {h.note && <> · {h.note}</>}
           </p>
         </li>
@@ -35,17 +35,17 @@ export function FieldUpdateList({ updates }: { updates: FieldUpdate[] }) {
   return (
     <ul className="space-y-3">
       {[...updates].reverse().map((u) => (
-        <li key={u.id} className="rounded-lg border border-[var(--line)] bg-ink-950/40 p-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="text-sm font-medium">
+        <li key={u.id} className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4 shadow-2xs">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--line)] pb-2">
+            <span className="text-sm font-bold text-ink-100">
               {u.type === 'action_submission' ? 'Action submitted for verification' : 'Inspection update'}
             </span>
-            <span className="num text-[11px] text-ink-400">{u.officerName} · {fmtDateTime(u.timestamp)}</span>
+            <span className="num text-[11px] text-ink-200 font-medium">{u.officerName} · {fmtDateTime(u.timestamp)}</span>
           </div>
-          <dl className="mt-2 grid gap-2 text-xs sm:grid-cols-3">
-            <div><dt className="text-ink-400">Inspection notes</dt><dd className="text-ink-200">{u.inspectionNotes || '—'}</dd></div>
-            <div><dt className="text-ink-400">Observations</dt><dd className="text-ink-200">{u.observations || '—'}</dd></div>
-            <div><dt className="text-ink-400">Action taken</dt><dd className="text-ink-200">{u.actionTaken || '—'}</dd></div>
+          <dl className="mt-2.5 grid gap-2.5 text-xs sm:grid-cols-3">
+            <div><dt className="font-bold text-ink-200">Inspection notes</dt><dd className="mt-0.5 text-ink-100">{u.inspectionNotes || '—'}</dd></div>
+            <div><dt className="font-bold text-ink-200">Observations</dt><dd className="mt-0.5 text-ink-100">{u.observations || '—'}</dd></div>
+            <div><dt className="font-bold text-ink-200">Action taken</dt><dd className="mt-0.5 text-ink-100 font-medium">{u.actionTaken || '—'}</dd></div>
           </dl>
           {(u.beforeMedia.length > 0 || u.afterMedia.length > 0) && <MediaGrid media={[...u.beforeMedia, ...u.afterMedia]} className="mt-3" />}
         </li>
@@ -82,7 +82,7 @@ export function AllocationForm({ incident, onDone }: { incident: Incident; onDon
       <Field label="Department" htmlFor="alloc-dept" required help={department === suggested ? 'Suggested by AI routing' : undefined}>
         <select
           id="alloc-dept"
-          className="input"
+          className="input border-[var(--line-strong)] focus:border-muted-teal text-ink-100"
           value={department}
           onChange={(e) => {
             setDepartment(e.target.value);
@@ -95,7 +95,7 @@ export function AllocationForm({ incident, onDone }: { incident: Incident; onDon
         </select>
       </Field>
       <Field label="Field officer" htmlFor="alloc-officer" required>
-        <select id="alloc-officer" className="input" value={officerId} onChange={(e) => setOfficerId(e.target.value)}>
+        <select id="alloc-officer" className="input border-[var(--line-strong)] focus:border-muted-teal text-ink-100" value={officerId} onChange={(e) => setOfficerId(e.target.value)}>
           {officersInDept.length === 0 && <option value="">No officers in this department</option>}
           {officersInDept.map((o) => (
             <option key={o.id} value={o.id}>{o.name} · {o.zone}</option>
@@ -108,23 +108,23 @@ export function AllocationForm({ incident, onDone }: { incident: Incident; onDon
         </select>
       </Field>
       <Field label="Priority" htmlFor="alloc-priority" required>
-        <select id="alloc-priority" className="input" value={priority} onChange={(e) => setPriority(e.target.value as Priority)}>
+        <select id="alloc-priority" className="input border-[var(--line-strong)] focus:border-muted-teal text-ink-100" value={priority} onChange={(e) => setPriority(e.target.value as Priority)}>
           {PRIORITIES.map((p) => (
             <option key={p}>{p}</option>
           ))}
         </select>
       </Field>
       <Field label="Deadline" htmlFor="alloc-deadline" required>
-        <input id="alloc-deadline" type="date" className="input" value={deadline} min={localDay()} onChange={(e) => setDeadline(e.target.value)} />
+        <input id="alloc-deadline" type="date" className="input border-[var(--line-strong)] focus:border-muted-teal text-ink-100" value={deadline} min={localDay()} onChange={(e) => setDeadline(e.target.value)} />
       </Field>
       <div className="sm:col-span-2">
         <Field label="Instructions for officer" htmlFor="alloc-notes">
-          <textarea id="alloc-notes" rows={2} className="input" value={instructions} onChange={(e) => setInstructions(e.target.value)} placeholder="Optional" />
+          <textarea id="alloc-notes" rows={2} className="input border-[var(--line-strong)] focus:border-muted-teal text-ink-100" value={instructions} onChange={(e) => setInstructions(e.target.value)} placeholder="Optional" />
         </Field>
       </div>
-      {error && <p role="alert" className="text-xs text-[#b42318] sm:col-span-2">{error}</p>}
+      {error && <p role="alert" className="text-xs text-[#b42318] font-bold sm:col-span-2">{error}</p>}
       <div className="sm:col-span-2">
-        <button type="submit" className="btn btn-primary">
+        <button type="submit" className="btn btn-primary bg-muted-teal hover:bg-deep-teal text-white font-bold shadow-md">
           <Send size={15} aria-hidden /> {incident.assignment ? 'Update assignment' : 'Assign incident'}
         </button>
       </div>
@@ -197,7 +197,7 @@ export function VerificationActions({ incident }: { incident: Incident }) {
         }
       >
         <Field label="Note" htmlFor="verify-note" error={error} required={decision !== 'verify'}>
-          <textarea id="verify-note" rows={3} className="input" value={note} onChange={(e) => setNote(e.target.value)} placeholder={decision ? DECISION_COPY[decision].placeholder : ''} aria-invalid={!!error} autoFocus />
+          <textarea id="verify-note" rows={3} className="input border-[var(--line-strong)] focus:border-muted-teal" value={note} onChange={(e) => setNote(e.target.value)} placeholder={decision ? DECISION_COPY[decision].placeholder : ''} aria-invalid={!!error} autoFocus />
         </Field>
       </Modal>
     </div>

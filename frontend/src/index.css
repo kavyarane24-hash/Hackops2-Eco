@@ -2,11 +2,16 @@
 @import "leaflet/dist/leaflet.css";
 
 /* ── Design tokens ──────────────────────────────────────────────────────────
-   Restrained environmental palette on a deep slate base. Teal is the single
-   interactive accent; rust is reserved for "demo/simulated" labelling.
-   Severity colours are fixed and shared by badges, charts and map markers.
-   Fonts are system fonts (no web-font download). */
+   Reference Environmental-Tech Palette:
+   - Slate blue:     #2F4454
+   - Deep burgundy:  #2E151B
+   - Dusty rose:     #DA7B93
+   - Muted teal:     #376E6F
+   - Deep teal:      #1C3334
+   Plus lighter tints, intermediate shades, and purposeful role mappings.
+   Landing page glassmorphism identity is strictly preserved. */
 @theme {
+  --color-teal-lite: #376e6f;
   --font-sans: Arial, sans-serif;
   --font-display: "Trebuchet MS", Arial, sans-serif;
   --font-nav: Tahoma, Arial, sans-serif;
@@ -14,45 +19,77 @@
   --font-report: Georgia, "Times New Roman", serif;
   --font-mono: "Courier New", Courier, monospace;
 
-  /* Neutral scale, light → dark: 950 is the page, 100 is primary text. */
-  --color-ink-950: #f5f8f7;
-  --color-ink-900: #ffffff;
-  --color-ink-850: #fafcfb;
-  --color-ink-800: #eef3f1;
-  --color-ink-700: #e1e8e6;
-  --color-ink-600: #cbd5d3;
-  --color-ink-500: #93a1a5;
-  --color-ink-400: #68777b;
-  --color-ink-300: #4e5d62;
-  --color-ink-200: #34434a;
-  --color-ink-100: #243238;
+  /* Reference Palette Foundation Tokens */
+  --color-slate-blue: #2F4454;
+  --color-slate-blue-light: #435e72;
+  --color-slate-blue-dark: #1f2f3b;
+  --color-slate-blue-soft: #edf3f7;
 
-  --color-accent: #087f8c;
-  --color-accent-strong: #075e63;
-  --color-accent-soft: #087f8c14;
+  --color-deep-burgundy: #2E151B;
+  --color-deep-burgundy-light: #4a252e;
+  --color-deep-burgundy-soft: #fcf0f3;
+
+  --color-dusty-rose: #DA7B93;
+  --color-dusty-rose-light: #e494a8;
+  --color-dusty-rose-dark: #b85770;
+  --color-dusty-rose-soft: #fbf1f4;
+
+  --color-muted-teal: #376E6F;
+  --color-muted-teal-light: #48898a;
+  --color-muted-teal-dark: #2a5657;
+  --color-muted-teal-soft: #eaf3f3;
+
+  --color-deep-teal: #1C3334;
+  --color-deep-teal-light: #294849;
+  --color-deep-teal-dark: #122223;
+  --color-deep-teal-soft: #e8f0f0;
+
+  /* Neutral scale with subtle environmental slate-teal undertone */
+  --color-ink-950: #edf3f3;
+  --color-ink-900: #ffffff;
+  --color-ink-850: #f5f8f8;
+  --color-ink-800: #e2ecec;
+  --color-ink-700: #cbd8d7;
+  --color-ink-600: #9cb3b2;
+  --color-ink-500: #6f8887;
+  --color-ink-400: #496364;
+  --color-ink-300: #334a4c;
+  --color-ink-200: #223738;
+  --color-ink-100: #142526;
+
+  /* Interactive and semantic colors */
+  --color-accent: #376E6F;
+  --color-accent-strong: #1C3334;
+  --color-accent-soft: rgba(55, 110, 111, 0.12);
   --color-mint: #e8f5ef;
   --color-green: #27966b;
   --color-purple: #7456a8;
-  --color-rust: #a35a2a;
-  --color-steel: #2f6f86;
-  --color-azure: #2563a8;
+  --color-rust: #2E151B;
+  --color-steel: #2F4454;
+  --color-azure: #376E6F;
 
   --color-sev-low: #1f9d55;
   --color-sev-medium: #c98a00;
   --color-sev-high: #e0620b;
-  --color-sev-critical: #d92d20;
+  --color-sev-critical: #b42318;
 
   --radius-panel: 12px;
 }
 
 :root {
+  --text-strong: var(--color-deep-teal);
+  --text-muted: var(--color-slate-blue);
+  --text-accent: var(--color-dusty-rose-dark);
+  --attr-bg: rgb(255 255 255 / 0.92);
   color-scheme: light;
   --surface: #ffffff;
   --surface-strong: #ffffff;
-  --surface-sunken: #f2f6f5;
-  --line: rgb(36 50 56 / 0.08);
-  --line-strong: rgb(36 50 56 / 0.16);
-  --shadow-soft: 0 1px 2px rgb(36 50 56 / 0.05), 0 1px 1px rgb(36 50 56 / 0.03);
+  --surface-sunken: #f1f6f6;
+  --surface-tinted: #f4f8f8;
+  --line: rgb(47 68 84 / 0.12);
+  --line-strong: rgb(47 68 84 / 0.22);
+  --shadow-soft: 0 1px 3px rgb(28 51 52 / 0.06), 0 1px 2px rgb(28 51 52 / 0.04);
+  --shadow-medium: 0 4px 14px rgb(28 51 52 / 0.08), 0 1px 3px rgb(28 51 52 / 0.05);
 }
 
 html,
@@ -85,43 +122,45 @@ html.lenis, html.lenis body { height: auto; }
 .lenis.lenis-smooth { scroll-behavior: auto !important; }
 
 @layer components {
-  /* One surface style. Sections are separated by whitespace and headings,
-     not by stacked borders. */
+  /* Rich, distinct environmental surfaces with crisp slate-teal borders */
   .panel {
     background: var(--surface);
+    border: 1px solid var(--line);
     border-radius: var(--radius-panel);
     box-shadow: var(--shadow-soft);
   }
   .panel-solid {
     background: var(--surface-strong);
-    border: 1px solid var(--line);
+    border: 1px solid var(--line-strong);
     border-radius: var(--radius-panel);
+    box-shadow: var(--shadow-soft);
   }
   .page-title {
     font-family: var(--font-display);
     font-size: 26px;
     font-weight: 700;
     line-height: 1.2;
-    color: var(--color-ink-100);
+    color: var(--text-strong);
   }
   .section-title {
     font-family: var(--font-display);
     font-size: 18px;
     font-weight: 700;
-    color: var(--color-ink-100);
+    color: var(--text-muted);
   }
   .panel-title {
     font-family: var(--font-display);
     font-weight: 700;
     font-size: 15.5px;
-    color: var(--color-ink-100);
+    color: var(--text-strong);
   }
   .eyebrow {
     font-family: var(--font-nav);
     font-size: 11.5px;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
-    color: var(--color-ink-400);
+    color: var(--text-accent);
+    font-weight: 700;
   }
   .muted {
     font-family: var(--font-small);
@@ -133,7 +172,7 @@ html.lenis, html.lenis body { height: auto; }
     font-family: var(--font-nav);
     font-size: 13px;
     font-weight: 700;
-    color: var(--color-ink-200);
+    color: var(--text-muted);
     margin-bottom: 0.35rem;
   }
   .input {
@@ -145,13 +184,17 @@ html.lenis, html.lenis body { height: auto; }
     color: var(--color-ink-100);
     font-family: var(--font-sans);
     font-size: 14px;
-    transition: border-color 150ms, box-shadow 150ms;
+    transition: border-color 150ms, box-shadow 150ms, background-color 150ms;
   }
   .input::placeholder { color: var(--color-ink-500); }
+  .input:hover {
+    border-color: var(--color-slate-blue);
+  }
   .input:focus {
     outline: none;
-    border-color: var(--color-accent);
-    box-shadow: 0 0 0 3px var(--color-accent-soft);
+    background: #ffffff;
+    border-color: var(--color-muted-teal);
+    box-shadow: 0 0 0 3px rgba(55, 110, 111, 0.2);
   }
   .input[aria-invalid="true"] { border-color: var(--color-sev-critical); }
   .btn {
@@ -160,24 +203,52 @@ html.lenis, html.lenis body { height: auto; }
     justify-content: center;
     gap: 0.45rem;
     min-height: 36px;
-    padding: 0 0.9rem;
+    padding: 0 0.95rem;
     border-radius: 8px;
     font-family: var(--font-nav);
     font-size: 13px;
     font-weight: 700;
     cursor: pointer;
-    transition: background-color 150ms, border-color 150ms, color 150ms, transform 120ms;
+    transition: background-color 150ms, border-color 150ms, color 150ms, transform 120ms, box-shadow 150ms;
     border: 1px solid transparent;
     white-space: nowrap;
   }
   .btn:active:not(:disabled) { transform: scale(0.98); }
   .btn:disabled { opacity: 0.45; cursor: not-allowed; }
-  .btn-primary { background: var(--color-accent); color: #ffffff; }
-  .btn-primary:hover:not(:disabled) { background: var(--color-accent-strong); }
-  .btn-ghost { background: transparent; border-color: var(--line-strong); color: var(--color-ink-100); }
-  .btn-ghost:hover:not(:disabled) { background: var(--color-ink-800); }
-  .btn-quiet { background: transparent; color: var(--color-ink-300); }
-  .btn-quiet:hover:not(:disabled) { color: var(--color-ink-100); background: var(--color-ink-800); }
+  .btn-primary {
+    background: var(--color-muted-teal);
+    color: #ffffff;
+    box-shadow: 0 1px 2px rgba(28, 51, 52, 0.18);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: var(--color-deep-teal);
+  }
+  .btn-ghost {
+    background: transparent;
+    border-color: var(--line-strong);
+    color: var(--text-muted);
+  }
+  .btn-ghost:hover:not(:disabled) {
+    background: var(--color-muted-teal-soft);
+    color: var(--text-strong);
+    border-color: var(--color-muted-teal);
+  }
+  .btn-quiet {
+    background: transparent;
+    color: var(--text-muted);
+  }
+  .btn-quiet:hover:not(:disabled) {
+    color: var(--text-strong);
+    background: var(--color-muted-teal-soft);
+  }
+  .btn-rose {
+    background: var(--color-dusty-rose);
+    color: #ffffff;
+    box-shadow: 0 1px 2px rgba(46, 21, 27, 0.15);
+  }
+  .btn-rose:hover:not(:disabled) {
+    background: var(--color-dusty-rose-dark);
+  }
   .btn-danger { background: #fdecea; border-color: #f2b8b2; color: #b42318; }
   .btn-danger:hover:not(:disabled) { background: #fbd9d5; }
   .btn-success { background: var(--color-mint); border-color: #a9dcc4; color: #157a4b; }
@@ -186,12 +257,13 @@ html.lenis, html.lenis body { height: auto; }
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    padding: 0.1rem 0.5rem;
+    padding: 0.15rem 0.55rem;
     border-radius: 999px;
     font-family: var(--font-nav);
     font-size: 12px;
     border: 1px solid var(--line-strong);
-    color: var(--color-ink-200);
+    color: var(--text-muted);
+    background: var(--surface-sunken);
     white-space: nowrap;
   }
   .num {
@@ -204,14 +276,18 @@ html.lenis, html.lenis body { height: auto; }
     gap: 0.25rem;
     font-family: var(--font-nav);
     font-size: 11px;
-    color: var(--color-rust);
+    color: var(--color-deep-burgundy);
+    background: var(--color-deep-burgundy-soft);
+    padding: 0.1rem 0.45rem;
+    border-radius: 4px;
+    border: 1px solid rgba(46, 21, 27, 0.15);
     white-space: nowrap;
   }
   /* Segmented tab control used for sub-navigation and view switches. */
   .tabs {
     display: flex;
     gap: 0.25rem;
-    border-bottom: 1px solid var(--line);
+    border-bottom: 1px solid var(--line-strong);
     overflow-x: auto;
   }
   .tab {
@@ -219,41 +295,120 @@ html.lenis, html.lenis body { height: auto; }
     font-size: 13.5px;
     padding: 0.6rem 0.85rem;
     border-bottom: 2px solid transparent;
-    color: var(--color-ink-400);
+    color: var(--text-muted);
+    opacity: 0.8;
     white-space: nowrap;
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
+    transition: color 150ms, border-color 150ms, opacity 150ms;
   }
-  .tab:hover { color: var(--color-ink-100); }
-  .tab[aria-selected="true"], .tab.active { color: var(--color-ink-100); border-color: var(--color-accent); }
+  .tab:hover {
+    color: var(--text-strong);
+    opacity: 1;
+  }
+  .tab[aria-selected="true"], .tab.active {
+    color: var(--text-strong);
+    opacity: 1;
+    font-weight: 700;
+    border-bottom-color: var(--color-dusty-rose);
+  }
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--color-muted-teal);
   outline-offset: 2px;
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-ink-600) transparent;
+  scrollbar-color: var(--color-slate-blue-light) transparent;
 }
 
-/* Leaflet dark treatment: OSM tiles stay legible but toned down. */
-.leaflet-container { background: var(--color-ink-900); font-family: var(--font-sans); }
-.map-dark .leaflet-tile-pane { filter: saturate(0.75) contrast(0.97); }
+/* Leaflet dark treatment: OSM tiles stay legible with environmental tint */
+.leaflet-container { background: #1C3334; font-family: var(--font-sans); }
+.map-dark .leaflet-tile-pane { filter: saturate(0.85) contrast(0.98); }
 .leaflet-popup-content-wrapper, .leaflet-popup-tip {
-  background: var(--color-ink-850);
+  background: var(--surface);
   color: var(--color-ink-100);
   border: 1px solid var(--line-strong);
+  box-shadow: var(--shadow-medium);
 }
 .leaflet-popup-content { margin: 12px 14px; font-size: 13px; }
-.leaflet-container a.leaflet-popup-close-button { color: var(--color-ink-300); }
-.leaflet-control-attribution { background: rgb(255 255 255 / 0.9) !important; color: var(--color-ink-300) !important; }
-.leaflet-control-attribution a { color: var(--color-accent) !important; }
-.leaflet-bar a { background: var(--color-ink-850) !important; color: var(--color-ink-100) !important; border-color: var(--line-strong) !important; }
+.leaflet-container a.leaflet-popup-close-button { color: var(--text-muted); }
+.leaflet-control-attribution { background: var(--attr-bg) !important; color: var(--text-muted) !important; }
+.leaflet-control-attribution a { color: var(--color-muted-teal) !important; }
+.leaflet-bar a { background: var(--surface) !important; color: var(--text-strong) !important; border-color: var(--line-strong) !important; }
+.leaflet-bar a:hover { background: var(--color-ink-800) !important; color: var(--text-strong) !important; }
 
-/* ── Landing page glass (landing only) ─────────────────────────────────── */
+/* ── App theme ("Haus" palette) ───────────────────────────────────────────
+   Applied to <html> only while the dashboards are mounted, so the landing
+   page keeps its own look. Slate base, deep teal-slate surfaces, warm
+   off-white text, dusty-rose accent, teal highlights. */
+html.app-haus {
+  color-scheme: dark;
+  --text-strong: #f6eef1;
+  --text-muted: #a9bac4;
+  --text-accent: #e8a0b2;
+  --attr-bg: rgb(34 51 62 / 0.9);
+  --color-ink-950: #2f4454;
+  --color-ink-900: #22333e;
+  --color-ink-850: #2a3d4a;
+  --color-ink-800: #33495a;
+  --color-ink-700: #3d5568;
+  --color-ink-600: #557083;
+  --color-ink-500: #7f97a6;
+  --color-ink-400: #a9bac4;
+  --color-ink-300: #c6d2d9;
+  --color-ink-200: #e0e7eb;
+  --color-ink-100: #f6eef1;
+
+  --color-accent: #da7b93;
+  --color-accent-strong: #e8a0b2;
+  --color-accent-soft: rgb(218 123 147 / 0.16);
+  --color-mint: #376e6f;
+  --color-purple: #e494a8;
+  --color-teal-lite: #7cc4c2;
+  --color-rust: #f0a8b8;
+
+  --color-sev-low: #5fd38d;
+  --color-sev-medium: #f2c14e;
+  --color-sev-high: #f59a52;
+  --color-sev-critical: #f06b6b;
+
+  --surface: #243846;
+  --surface-strong: #22333e;
+  --surface-sunken: #1c2c37;
+  --line: rgb(255 255 255 / 0.07);
+  --line-strong: rgb(255 255 255 / 0.15);
+  --shadow-soft: 0 1px 0 rgb(255 255 255 / 0.03) inset, 0 8px 24px rgb(10 20 26 / 0.25);
+}
+html.app-haus body {
+  background:
+    radial-gradient(900px 500px at 85% -10%, rgb(218 123 147 / 0.10), transparent 60%),
+    radial-gradient(800px 500px at 0% 100%, rgb(55 110 111 / 0.22), transparent 60%),
+    #2f4454;
+  background-attachment: fixed;
+}
+html.app-haus .panel { border: 1px solid var(--line); }
+html.app-haus .btn-primary { background: var(--color-accent); color: #2e151b; }
+html.app-haus .btn-primary:hover:not(:disabled) { background: #e494a8; }
+html.app-haus .btn-ghost { border-color: var(--line-strong); color: var(--color-ink-100); }
+html.app-haus .btn-success { background: rgb(55 110 111 / 0.35); border-color: #4f8e8f; color: #bfeeea; }
+html.app-haus .btn-success:hover:not(:disabled) { background: rgb(55 110 111 / 0.55); }
+html.app-haus .btn-danger { background: rgb(46 21 27 / 0.6); border-color: rgb(218 123 147 / 0.45); color: #f6c1cd; }
+html.app-haus .btn-danger:hover:not(:disabled) { background: rgb(46 21 27 / 0.85); }
+html.app-haus .chip { border-color: var(--line-strong); }
+/* Native dropdown lists are painted by the OS; give them the dark theme so options stay readable. */
+html.app-haus select option,
+html.app-haus select optgroup { background-color: #22333e; color: #f6eef1; }
+html.app-haus select optgroup { color: #e8a0b2; font-weight: 700; }
+html.app-haus select option:checked { background-color: #376e6f; color: #ffffff; }
+html.app-haus .map-dark .leaflet-tile-pane { filter: saturate(0.6) brightness(0.9) contrast(0.95); }
+html.app-haus .input:hover { border-color: var(--line-strong); }
+html.app-haus .leaflet-control-attribution a { color: #e8a0b2 !important; }
+
+/* ── Landing page glass (landing only - PRESERVED) ─────────────────────────── */
 .glass {
   background: rgb(255 255 255 / 0.14);
   border: 1px solid rgb(255 255 255 / 0.28);
@@ -280,11 +435,11 @@ html.lenis, html.lenis body { height: auto; }
   font-size: 14px;
   line-height: 1.6;
 }
-.report-doc h1, .report-doc h2, .report-doc h3 { font-family: var(--font-display); color: #13324a; }
+.report-doc h1, .report-doc h2, .report-doc h3 { font-family: var(--font-display); color: var(--color-deep-teal); }
 .report-doc table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin: 0.4rem 0 0.8rem; }
-.report-doc th { font-family: Arial, sans-serif; text-align: left; background: #e9eef1; color: #13324a; padding: 5px 7px; border: 1px solid #cfd8de; }
+.report-doc th { font-family: Arial, sans-serif; text-align: left; background: #edf3f3; color: var(--color-deep-teal); padding: 5px 7px; border: 1px solid #cfd8de; font-weight: 700; }
 .report-doc td { padding: 5px 7px; border: 1px solid #dde4e8; vertical-align: top; }
-.report-doc .rp-meta { font-family: Arial, sans-serif; font-size: 12px; color: #4b5a66; }
+.report-doc .rp-meta { font-family: Arial, sans-serif; font-size: 12px; color: var(--color-slate-blue); }
 .report-doc .rp-note { font-size: 12px; color: #5b6770; font-style: italic; }
 .report-doc code { font-family: var(--font-mono); font-size: 12px; }
 

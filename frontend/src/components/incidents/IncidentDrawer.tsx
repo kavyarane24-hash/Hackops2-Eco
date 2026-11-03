@@ -78,14 +78,14 @@ export function IncidentDrawer({ role }: { role: Role }) {
       title={
         incident ? (
           <div className="flex flex-wrap items-center gap-2">
-            <span className="num text-sm font-semibold">{incident.id}</span>
+            <span className="num text-sm font-bold text-ink-100">{incident.id}</span>
             {a && <SeverityBadge severity={a.severity} />}
             <span ref={statusRef} className="rounded-full">
               <StatusBadge status={incident.status} />
             </span>
           </div>
         ) : (
-          <span className="text-sm">Incident not found</span>
+          <span className="text-sm font-bold text-ink-100">Incident not found</span>
         )
       }
     >
@@ -93,14 +93,19 @@ export function IncidentDrawer({ role }: { role: Role }) {
         <p className="p-6 text-sm text-ink-400">This incident does not exist (it may have been removed by a demo reset).</p>
       ) : (
         <div>
-          <div role="tablist" aria-label="Incident sections" className="sticky top-0 z-10 flex gap-1 overflow-x-auto border-b border-[var(--line)] bg-ink-900 px-4">
+          <div role="tablist" aria-label="Incident sections" className="sticky top-0 z-10 flex gap-1 overflow-x-auto border-b border-[var(--line)] bg-[var(--surface)] px-4">
             {tabs.map((t) => (
               <button
                 key={t.id}
                 role="tab"
                 aria-selected={tab === t.id}
                 onClick={() => setTab(t.id)}
-                className={cn('whitespace-nowrap border-b-2 px-3 py-2.5 text-xs font-medium transition-colors', tab === t.id ? 'border-accent text-ink-100' : 'border-transparent text-ink-400 hover:text-ink-200')}
+                className={cn(
+                  'whitespace-nowrap border-b-2 px-3 py-2.5 text-xs font-bold transition-all',
+                  tab === t.id
+                    ? 'border-dusty-rose text-ink-100'
+                    : 'border-transparent text-ink-400 hover:text-ink-100',
+                )}
               >
                 {t.label}
               </button>
@@ -114,16 +119,16 @@ export function IncidentDrawer({ role }: { role: Role }) {
                 <AnalysisState incident={incident} />
                 <section>
                   <h3 className="eyebrow mb-1">{incident.source === 'data_import' ? 'Finding (from imported data)' : `Complaint (${c.language === 'hi' ? 'Hindi, original' : 'English'})`}</h3>
-                  <p className="whitespace-pre-wrap rounded-lg border border-[var(--line)] bg-ink-950/40 p-3 text-sm text-ink-100" lang={c.language}>
+                  <p className="whitespace-pre-wrap rounded-xl border border-[var(--line)] bg-surface-tinted/40 p-3.5 text-sm text-ink-100 font-medium" lang={c.language}>
                     {c.originalText}
                   </p>
                   {c.language === 'hi' && (
-                    <p className="mt-2 text-xs text-ink-400">
+                    <p className="mt-2 text-xs text-ink-300">
                       {c.translatedText ? <>English translation: {c.translatedText}</> : c.translationNote ?? 'Machine translation needs the backend AI service; the original Hindi text is preserved.'}
                     </p>
                   )}
                 </section>
-                <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-3.5">
                   <KeyValue k="Category" v={a?.category ?? 'Pending'} />
                   <KeyValue k="Urgency" v={a?.urgency ?? 'Pending'} />
                   <KeyValue k="Reported" v={fmtDateTime(c.timestamp)} />
@@ -131,10 +136,10 @@ export function IncidentDrawer({ role }: { role: Role }) {
                   <KeyValue k="Field officer" v={incident.assignment?.officerName ?? '—'} />
                   <KeyValue k="Deadline" v={incident.assignment ? `${fmtDate(incident.assignment.deadline)} · ${incident.assignment.priority}` : '—'} />
                 </dl>
-                <section>
+                <section className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-3.5">
                   <h3 className="eyebrow mb-1">Location</h3>
-                  <p className="flex items-start gap-1.5 text-sm text-ink-100">
-                    <MapPin size={14} className="mt-0.5 shrink-0 text-accent" aria-hidden />
+                  <p className="flex items-start gap-1.5 text-sm font-medium text-ink-100">
+                    <MapPin size={14} className="mt-0.5 shrink-0 text-teal-lite" aria-hidden />
                     {c.location.address || 'No address given'}
                   </p>
                   <p className="num mt-0.5 text-xs text-ink-400">
@@ -153,7 +158,7 @@ export function IncidentDrawer({ role }: { role: Role }) {
                   )}
                   {isValidCoord(c.location.lat, c.location.lng) && role === 'field' && (
                     <a
-                      className="btn btn-ghost mt-2 !min-h-8 !text-xs"
+                      className="btn btn-ghost mt-2 !min-h-8 !text-xs border-[var(--line-strong)] text-ink-200 hover:text-ink-100"
                       href={`https://www.openstreetmap.org/directions?to=${c.location.lat}%2C${c.location.lng}`}
                       target="_blank"
                       rel="noreferrer"
@@ -169,7 +174,7 @@ export function IncidentDrawer({ role }: { role: Role }) {
                   </section>
                 )}
                 {incident.importRef && (
-                  <section>
+                  <section className="rounded-xl border border-[var(--line)] bg-surface-tinted/40 p-3">
                     <h3 className="eyebrow mb-1">Data provenance</h3>
                     <p className="text-[13px] text-ink-300">
                       Created from imported data: {incident.importRef.fileNames.join(', ')} · {incident.importRef.readingIds.length} linked record(s). Analysis is a rule-based preliminary assessment.
@@ -177,11 +182,11 @@ export function IncidentDrawer({ role }: { role: Role }) {
                   </section>
                 )}
                 {role === 'admin' ? (
-                  <Link className="btn btn-ghost" to={`/admin/reports?for=${incident.id}`} onClick={() => close()}>
+                  <Link className="btn btn-ghost border-[var(--line-strong)] text-ink-200 hover:text-ink-100" to={`/admin/reports?for=${incident.id}`} onClick={() => close()}>
                     <FileDown size={15} aria-hidden /> Open incident report
                   </Link>
                 ) : role !== 'citizen' ? (
-                  <button className="btn btn-ghost" onClick={() => downloadIncidentPdf(incident)}>
+                  <button className="btn btn-ghost border-[var(--line-strong)] text-ink-200 hover:text-ink-100" onClick={() => downloadIncidentPdf(incident)}>
                     <FileDown size={15} aria-hidden /> Download incident summary (PDF)
                   </button>
                 ) : null}

@@ -243,14 +243,14 @@ export function IncidentMap({
           key={h.key}
           center={h.center}
           radius={900 + h.count * 700}
-          pathOptions={{ color: SEVERITY_COLOR[h.maxSeverity], weight: 1, opacity: 0.5, fillOpacity: 0.12, dashArray: '4 4' }}
+          pathOptions={{ color: SEVERITY_COLOR[h.maxSeverity], weight: 1.5, opacity: 0.65, fillOpacity: 0.15, dashArray: '4 4' }}
           interactive={false}
         />
       ))}
 
       {located.map((i) => {
         const sev = i.analysis?.severity ?? 'Low';
-        const color = i.status === 'Verified Closed' ? '#6b7a8f' : SEVERITY_COLOR[sev];
+        const color = i.status === 'Verified Closed' ? '#435e72' : SEVERITY_COLOR[sev];
         const isSel = i.id === selectedId;
         const pos: [number, number] = [i.complaint.location.lat as number, i.complaint.location.lng as number];
         return (
@@ -259,10 +259,10 @@ export function IncidentMap({
             center={pos}
             radius={isSel ? 13 : sev === 'Critical' ? 10 : 8}
             pathOptions={{
-              color: isSel ? '#ffffff' : color,
-              weight: isSel ? 3 : 2,
+              color: isSel ? '#DA7B93' : color,
+              weight: isSel ? 3.5 : 2,
               fillColor: color,
-              fillOpacity: i.status === 'Verified Closed' ? 0.35 : 0.8,
+              fillOpacity: i.status === 'Verified Closed' ? 0.4 : 0.85,
               dashArray: i.status === 'Verified Closed' ? '3 3' : undefined,
             }}
             eventHandlers={{ click: () => onSelect(i.id) }}
@@ -271,27 +271,27 @@ export function IncidentMap({
               {i.id} · {sev}
             </Tooltip>
             <Popup minWidth={240}>
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between gap-2">
-                  <strong className="num text-[13px]">{i.id}</strong>
-                  <span style={{ color }} className="text-xs font-semibold">{sev}</span>
+              <div className="space-y-2 p-1">
+                <div className="flex items-center justify-between gap-2 border-b border-[var(--line)] pb-1">
+                  <strong className="num text-[13px] text-ink-100 font-bold">{i.id}</strong>
+                  <span style={{ color }} className="text-xs font-bold">{sev}</span>
                 </div>
-                <p className="text-xs text-ink-300">{i.analysis?.category ?? 'Awaiting analysis'}</p>
-                <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
+                <p className="text-xs font-medium text-ink-100">{i.analysis?.category ?? 'Awaiting analysis'}</p>
+                <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-ink-200">
                   <dt className="text-ink-400">Urgency</dt>
-                  <dd>{i.analysis?.urgency ?? '—'}</dd>
+                  <dd className="font-semibold text-ink-100">{i.analysis?.urgency ?? '—'}</dd>
                   <dt className="text-ink-400">Status</dt>
-                  <dd>{i.status}</dd>
+                  <dd className="font-semibold text-ink-100">{i.status}</dd>
                   <dt className="text-ink-400">Department</dt>
-                  <dd>{i.assignment?.department ?? 'Unassigned'}</dd>
+                  <dd className="font-medium truncate">{i.assignment?.department ?? 'Unassigned'}</dd>
                   <dt className="text-ink-400">Officer</dt>
-                  <dd>{i.assignment?.officerName ?? '—'}</dd>
+                  <dd className="font-medium">{i.assignment?.officerName ?? '—'}</dd>
                   <dt className="text-ink-400">Reported</dt>
-                  <dd>{fmtDateTime(i.complaint.timestamp)}</dd>
+                  <dd className="font-medium">{fmtDateTime(i.complaint.timestamp)}</dd>
                 </dl>
                 <p className="text-[11px] text-ink-300">{i.complaint.location.address}</p>
-                {i.complaint.location.simulated && <p className="text-[10px] uppercase tracking-wider text-rust">Simulated demo coordinates</p>}
-                <button className="btn btn-primary !min-h-8 w-full !text-xs" onClick={() => onOpenDetails(i.id)}>
+                {i.complaint.location.simulated && <p className="text-[10px] uppercase tracking-wider text-deep-burgundy font-bold">Simulated demo coordinates</p>}
+                <button className="btn btn-primary !min-h-8 w-full !text-xs bg-muted-teal hover:bg-deep-teal font-bold shadow-xs" onClick={() => onOpenDetails(i.id)}>
                   Open full details
                 </button>
               </div>

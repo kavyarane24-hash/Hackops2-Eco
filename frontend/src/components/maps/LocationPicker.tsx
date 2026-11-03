@@ -53,27 +53,27 @@ export function LocationPicker({ lat, lng, onChange, useMyLocationLabel, invalid
 
   return (
     <div>
-      <div className={`relative h-56 overflow-hidden rounded-xl border ${invalid ? 'border-sev-critical' : 'border-[var(--line-strong)]'}`} data-lenis-prevent>
+      <div className={`relative h-56 overflow-hidden rounded-xl border ${invalid ? 'border-sev-critical ring-2 ring-sev-critical/20' : 'border-[var(--line-strong)] shadow-xs'}`} data-lenis-prevent>
         <MapContainer center={DEFAULT_CENTER} zoom={DEFAULT_ZOOM} className="map-dark h-full w-full" scrollWheelZoom={false}>
           <TileLayer url={OSM_TILES} attribution={OSM_ATTRIBUTION} />
           <MapAutoResize />
           <ClickToPick onPick={onChange} />
           <Recenter lat={lat} lng={lng} />
           {isValidCoord(lat, lng) && (
-            <CircleMarker center={[lat, lng as number]} radius={9} pathOptions={{ color: '#ffffff', weight: 2, fillColor: '#087f8c', fillOpacity: 0.9 }} />
+            <CircleMarker center={[lat, lng as number]} radius={9} pathOptions={{ color: '#ffffff', weight: 2.5, fillColor: '#376E6F', fillOpacity: 0.95 }} />
           )}
         </MapContainer>
       </div>
       <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-        <p className="num text-xs text-ink-300" aria-live="polite">
+        <p className="num text-xs font-semibold text-ink-100" aria-live="polite">
           {isValidCoord(lat, lng) ? `Lat ${lat.toFixed(5)}, Lng ${(lng as number).toFixed(5)}` : 'No location selected'}
         </p>
-        <button type="button" className="btn btn-ghost !min-h-8 !text-xs" onClick={locate} disabled={geoState === 'busy'}>
-          {geoState === 'busy' ? <Spinner size={12} /> : <Crosshair size={14} aria-hidden />}
+        <button type="button" className="btn btn-ghost !min-h-8 !text-xs border-[var(--line-strong)] text-ink-200 hover:text-ink-100 hover:bg-muted-teal/20" onClick={locate} disabled={geoState === 'busy'}>
+          {geoState === 'busy' ? <Spinner size={12} /> : <Crosshair size={14} className="text-teal-lite" aria-hidden />}
           {useMyLocationLabel}
         </button>
       </div>
-      {geoState === 'error' && <p className="mt-1 text-xs text-[#b42318]">{geoMsg}</p>}
+      {geoState === 'error' && <p className="mt-1 text-xs text-[#b42318] font-medium">{geoMsg}</p>}
     </div>
   );
 }
